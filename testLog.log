@@ -1,0 +1,330 @@
+nohup: ignoring input
+Using ROOT version: 6.36.08
+Using Delphes libraries found at: /home/ammelsayed/softwares/MG5_aMC_v3_5_15/Delphes
+Getting fatjet efficiencies:  Idle: 0,  Running: 40,  Completed: 0 [ current time: 10h36m31s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 39,  Completed: 1 [ 4m 47s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 38,  Completed: 2 [ 5m 17s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 37,  Completed: 3 [ 5m 23s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 36,  Completed: 4 [ 5m 26s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 35,  Completed: 5 [ 5m 36s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 34,  Completed: 6 [ 5m 37s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 33,  Completed: 7 [ 5m 41s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 32,  Completed: 8 [ 5m 49s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 31,  Completed: 9 [ 5m 50s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 30,  Completed: 10 [ 6m 0s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 28,  Completed: 12 [ 6m 11s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 27,  Completed: 13 [ 6m 18s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 26,  Completed: 14 [ 6m 21s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 25,  Completed: 15 [ 6m 22s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 23,  Completed: 17 [ 6m 23s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 22,  Completed: 18 [ 6m 28s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 21,  Completed: 19 [ 6m 37s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 20,  Completed: 20 [ 6m 46s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 19,  Completed: 21 [ 6m 48s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 18,  Completed: 22 [ 6m 50s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 17,  Completed: 23 [ 6m 58s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 16,  Completed: 24 [ 6m 59s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 15,  Completed: 25 [ 7m 0s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 14,  Completed: 26 [ 7m 1s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 13,  Completed: 27 [ 7m 2s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 12,  Completed: 28 [ 7m 3s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 11,  Completed: 29 [ 7m 4s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 9,  Completed: 31 [ 7m 5s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 7,  Completed: 33 [ 7m 6s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 6,  Completed: 34 [ 7m 7s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 5,  Completed: 35 [ 7m 8s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 3,  Completed: 37 [ 7m 11s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 1,  Completed: 39 [ 7m 12s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 0,  Completed: 40 [ 7m 15s ]
+Getting fatjet efficiencies:  Idle: 0,  Running: 0,  Completed: 40 [ 7m 15s ]
+Saved merged tree 'results' -> fatjet_reconstruction_efficiency_results.root (1477904 entries)
+
+Efficiency vs pT for W:
+pT bin [GeV]   N_total     N_matched   Eff (%)
+100-150      70433.0       15181.0       21.55
+150-200      87313.0       52854.0       60.53
+200-250     102742.0       79096.0       76.99
+250-300     116339.0       98041.0       84.27
+300-350     126320.0      112136.0       88.77
+350-400     130635.0      120217.0       92.03
+400-450     126694.0      120505.0       95.12
+450-500     116400.0      113874.0       97.83
+500-550     102092.0      101327.0       99.25
+550-600      87179.0       86851.0       99.62
+600-650      73072.0       72869.0       99.72
+650-700      58493.0       58394.0       99.83
+700-750      46661.0       46614.0       99.90
+750-800      36463.0       36427.0       99.90
+800-850      28459.0       28444.0       99.95
+850-900      22157.0       22154.0       99.99
+900-950      17211.0       17198.0       99.92
+950-1000      13102.0       13101.0       99.99
+1000-1050       9853.0        9851.0       99.98
+1050-1100       7730.0        7728.0       99.97
+1100-1150       6025.0        6025.0      100.00
+1150-1200       4252.0        4252.0      100.00
+1200-1250       3373.0        3373.0      100.00
+1250-1300       2649.0        2649.0      100.00
+1300-1350       1959.0        1959.0      100.00
+1350-1400       1524.0        1524.0      100.00
+1400-1450       1159.0        1159.0      100.00
+1450-1500        819.0         819.0      100.00
+1500-1550        673.0         673.0      100.00
+1550-1600        512.0         512.0      100.00
+1600-1650        390.0         390.0      100.00
+1650-1700        325.0         325.0      100.00
+1700-1750        253.0         253.0      100.00
+1750-1800        173.0         173.0      100.00
+1800-1850        139.0         139.0      100.00
+1850-1900         98.0          98.0      100.00
+1900-1950         73.0          73.0      100.00
+1950-2000         56.0          56.0      100.00
+Total: 1403800.0 W bosons, 1237314.0 matched, 88.14%
+
+Efficiency vs pT for Z:
+pT bin [GeV]   N_total     N_matched   Eff (%)
+100-150      49374.0        5841.0       11.83
+150-200      67717.0       39035.0       57.64
+200-250      88686.0       72712.0       81.99
+250-300     111293.0       96404.0       86.62
+300-350     127033.0      114607.0       90.22
+350-400     138223.0      128813.0       93.19
+400-450     137736.0      131458.0       95.44
+450-500     125496.0      123172.0       98.15
+500-550     111821.0      111188.0       99.43
+550-600      97071.0       96888.0       99.81
+600-650      80519.0       80385.0       99.83
+650-700      65142.0       65106.0       99.94
+700-750      51371.0       51344.0       99.95
+750-800      42063.0       42015.0       99.89
+800-850      32286.0       32274.0       99.96
+850-900      24956.0       24946.0       99.96
+900-950      19625.0       19622.0       99.98
+950-1000      14191.0       14191.0      100.00
+1000-1050      11250.0       11250.0      100.00
+1050-1100       7966.0        7966.0      100.00
+1100-1150       6976.0        6961.0       99.78
+1150-1200       5587.0        5587.0      100.00
+1200-1250       3894.0        3894.0      100.00
+1250-1300       3166.0        3166.0      100.00
+1300-1350       2423.0        2423.0      100.00
+1350-1400       1523.0        1523.0      100.00
+1400-1450       1270.0        1270.0      100.00
+1450-1500        943.0         943.0      100.00
+1500-1550        841.0         841.0      100.00
+1550-1600        613.0         613.0      100.00
+1600-1650        480.0         480.0      100.00
+1650-1700        382.0         382.0      100.00
+1700-1750        254.0         254.0      100.00
+1750-1800        232.0         232.0      100.00
+1800-1850        152.0         152.0      100.00
+1850-1900        157.0         157.0      100.00
+1900-1950         70.0          70.0      100.00
+1950-2000         91.0          91.0      100.00
+Total: 1432873.0 Z bosons, 1298256.0 matched, 90.61%
+
+Efficiency vs pT for H:
+pT bin [GeV]   N_total     N_matched   Eff (%)
+100-150      42635.0        5029.0       11.80
+150-200      64101.0       27034.0       42.17
+200-250      86642.0       62334.0       71.94
+250-300     112472.0       97532.0       86.72
+300-350     131557.0      118553.0       90.12
+350-400     139120.0      128701.0       92.51
+400-450     137958.0      132203.0       95.83
+450-500     127506.0      125505.0       98.43
+500-550     116358.0      115870.0       99.58
+550-600      97517.0       97384.0       99.86
+600-650      83389.0       83304.0       99.90
+650-700      66888.0       66867.0       99.97
+700-750      53958.0       53927.0       99.94
+750-800      43531.0       43530.0      100.00
+800-850      33239.0       33239.0      100.00
+850-900      26232.0       26224.0       99.97
+900-950      18780.0       18780.0      100.00
+950-1000      15479.0       15475.0       99.97
+1000-1050      11775.0       11775.0      100.00
+1050-1100       8461.0        8461.0      100.00
+1100-1150       6668.0        6668.0      100.00
+1150-1200       5271.0        5271.0      100.00
+1200-1250       3974.0        3974.0      100.00
+1250-1300       2994.0        2994.0      100.00
+1300-1350       2167.0        2167.0      100.00
+1350-1400       1860.0        1860.0      100.00
+1400-1450       1252.0        1252.0      100.00
+1450-1500        965.0         965.0      100.00
+1500-1550        845.0         845.0      100.00
+1550-1600        575.0         575.0      100.00
+1600-1650        470.0         470.0      100.00
+1650-1700        360.0         360.0      100.00
+1700-1750        310.0         310.0      100.00
+1750-1800        236.0         236.0      100.00
+1800-1850        209.0         209.0      100.00
+1850-1900        107.0         107.0      100.00
+1900-1950         70.0          70.0      100.00
+1950-2000         56.0          56.0      100.00
+Total: 1445987.0 H bosons, 1300116.0 matched, 89.91%
+Info in <TCanvas::Print>: png file ./plots/fatjet_reconstruction_efficiency_vs_pt.png has been created
+Info in <TCanvas::Print>: pdf file ./plots/fatjet_reconstruction_efficiency_vs_pt.pdf has been created
+
+Efficiency vs eta for W:
+  [-2.5, -2.4)   N=3648  matched=1726  eff=47.31%
+  [-2.4, -2.3)   N=4297  matched=2333  eff=54.29%
+  [-2.3, -2.2)   N=5383  matched=3111  eff=57.79%
+  [-2.2, -2.1)   N=6182  matched=3976  eff=64.32%
+  [-2.1, -2.0)   N=7470  matched=5032  eff=67.36%
+  [-2.0, -1.9)   N=8906  matched=6306  eff=70.81%
+  [-1.9, -1.8)   N=10515  matched=7725  eff=73.47%
+  [-1.8, -1.7)   N=12652  matched=9465  eff=74.81%
+  [-1.7, -1.6)   N=14774  matched=11548  eff=78.16%
+  [-1.6, -1.5)   N=16940  matched=13626  eff=80.44%
+  [-1.5, -1.4)   N=20071  matched=16431  eff=81.86%
+  [-1.4, -1.3)   N=23140  matched=19239  eff=83.14%
+  [-1.3, -1.2)   N=26152  matched=21935  eff=83.88%
+  [-1.2, -1.1)   N=30148  matched=25487  eff=84.54%
+  [-1.1, -1.0)   N=33037  matched=28566  eff=86.47%
+  [-1.0, -0.9)   N=36853  matched=32120  eff=87.16%
+  [-0.9, -0.8)   N=40549  matched=35310  eff=87.08%
+  [-0.8, -0.7)   N=43964  matched=38523  eff=87.62%
+  [-0.7, -0.6)   N=47524  matched=41900  eff=88.17%
+  [-0.6, -0.5)   N=50321  matched=44721  eff=88.87%
+  [-0.5, -0.4)   N=52538  matched=46793  eff=89.07%
+  [-0.4, -0.3)   N=55226  matched=49129  eff=88.96%
+  [-0.3, -0.2)   N=56919  matched=50788  eff=89.23%
+  [-0.2, -0.1)   N=57822  matched=51433  eff=88.95%
+  [-0.1, 0.0)   N=58347  matched=52027  eff=89.17%
+  [0.0, 0.1)   N=59150  matched=52877  eff=89.39%
+  [0.1, 0.2)   N=57971  matched=51701  eff=89.18%
+  [0.2, 0.3)   N=57156  matched=51000  eff=89.23%
+  [0.3, 0.4)   N=54406  matched=48521  eff=89.18%
+  [0.4, 0.5)   N=52229  matched=46573  eff=89.17%
+  [0.5, 0.6)   N=50156  matched=44394  eff=88.51%
+  [0.6, 0.7)   N=47065  matched=41510  eff=88.20%
+  [0.7, 0.8)   N=43514  matched=38177  eff=87.73%
+  [0.8, 0.9)   N=39991  matched=34761  eff=86.92%
+  [0.9, 1.0)   N=36846  matched=32056  eff=87.00%
+  [1.0, 1.1)   N=32837  matched=28284  eff=86.13%
+  [1.1, 1.2)   N=29474  matched=25073  eff=85.07%
+  [1.2, 1.3)   N=26103  matched=22001  eff=84.29%
+  [1.3, 1.4)   N=23224  matched=19319  eff=83.19%
+  [1.4, 1.5)   N=19535  matched=15954  eff=81.67%
+  [1.5, 1.6)   N=16869  matched=13520  eff=80.15%
+  [1.6, 1.7)   N=14861  matched=11660  eff=78.46%
+  [1.7, 1.8)   N=12647  matched=9614  eff=76.02%
+  [1.8, 1.9)   N=10538  matched=7799  eff=74.01%
+  [1.9, 2.0)   N=8776  matched=6130  eff=69.85%
+  [2.0, 2.1)   N=7370  matched=4944  eff=67.08%
+  [2.1, 2.2)   N=6257  matched=3887  eff=62.12%
+  [2.2, 2.3)   N=5487  matched=3208  eff=58.47%
+  [2.3, 2.4)   N=4521  matched=2399  eff=53.06%
+  [2.4, 2.5)   N=3806  matched=1831  eff=48.11%
+Total: 1444167.0 W bosons, 1236443.0 matched, 85.62%
+
+Efficiency vs eta for Z:
+  [-2.5, -2.4)   N=4204  matched=2437  eff=57.97%
+  [-2.4, -2.3)   N=5581  matched=3341  eff=59.86%
+  [-2.3, -2.2)   N=6612  matched=4225  eff=63.90%
+  [-2.2, -2.1)   N=7480  matched=5216  eff=69.73%
+  [-2.1, -2.0)   N=8906  matched=6556  eff=73.61%
+  [-2.0, -1.9)   N=10365  matched=8052  eff=77.68%
+  [-1.9, -1.8)   N=12535  matched=10064  eff=80.29%
+  [-1.8, -1.7)   N=14629  matched=11952  eff=81.70%
+  [-1.7, -1.6)   N=16209  matched=13483  eff=83.18%
+  [-1.6, -1.5)   N=18947  matched=16289  eff=85.97%
+  [-1.5, -1.4)   N=22467  matched=19736  eff=87.84%
+  [-1.4, -1.3)   N=24673  matched=21558  eff=87.37%
+  [-1.3, -1.2)   N=28012  matched=25040  eff=89.39%
+  [-1.2, -1.1)   N=30657  matched=27751  eff=90.52%
+  [-1.1, -1.0)   N=33425  matched=30252  eff=90.51%
+  [-1.0, -0.9)   N=36615  matched=33533  eff=91.58%
+  [-0.9, -0.8)   N=40588  matched=37347  eff=92.01%
+  [-0.8, -0.7)   N=42405  matched=38967  eff=91.89%
+  [-0.7, -0.6)   N=45854  matched=42278  eff=92.20%
+  [-0.6, -0.5)   N=47170  matched=43676  eff=92.59%
+  [-0.5, -0.4)   N=49959  matched=46375  eff=92.83%
+  [-0.4, -0.3)   N=51107  matched=47399  eff=92.74%
+  [-0.3, -0.2)   N=51915  matched=48372  eff=93.18%
+  [-0.2, -0.1)   N=53555  matched=49774  eff=92.94%
+  [-0.1, 0.0)   N=54491  matched=50411  eff=92.51%
+  [0.0, 0.1)   N=53653  matched=49871  eff=92.95%
+  [0.1, 0.2)   N=54471  matched=50533  eff=92.77%
+  [0.2, 0.3)   N=52210  matched=48365  eff=92.64%
+  [0.3, 0.4)   N=51053  matched=47582  eff=93.20%
+  [0.4, 0.5)   N=50078  matched=46389  eff=92.63%
+  [0.5, 0.6)   N=47108  matched=43780  eff=92.94%
+  [0.6, 0.7)   N=46102  matched=42695  eff=92.61%
+  [0.7, 0.8)   N=42399  matched=39034  eff=92.06%
+  [0.8, 0.9)   N=40073  matched=36812  eff=91.86%
+  [0.9, 1.0)   N=36382  matched=33181  eff=91.20%
+  [1.0, 1.1)   N=33757  matched=30576  eff=90.58%
+  [1.1, 1.2)   N=31168  matched=28104  eff=90.17%
+  [1.2, 1.3)   N=28441  matched=25308  eff=88.98%
+  [1.3, 1.4)   N=24501  matched=21754  eff=88.79%
+  [1.4, 1.5)   N=21837  matched=18998  eff=87.00%
+  [1.5, 1.6)   N=18789  matched=16324  eff=86.88%
+  [1.6, 1.7)   N=16572  matched=14126  eff=85.24%
+  [1.7, 1.8)   N=14512  matched=11930  eff=82.21%
+  [1.8, 1.9)   N=12402  matched=9930  eff=80.07%
+  [1.9, 2.0)   N=10883  matched=8313  eff=76.39%
+  [2.0, 2.1)   N=8902  matched=6503  eff=73.05%
+  [2.1, 2.2)   N=7381  matched=5238  eff=70.97%
+  [2.2, 2.3)   N=6453  matched=4251  eff=65.88%
+  [2.3, 2.4)   N=4946  matched=3015  eff=60.96%
+  [2.4, 2.5)   N=4242  matched=2384  eff=56.20%
+Total: 1436676.0 Z bosons, 1289080.0 matched, 89.73%
+
+Efficiency vs eta for H:
+  [-2.5, -2.4)   N=4041  matched=1996  eff=49.39%
+  [-2.4, -2.3)   N=5360  matched=3111  eff=58.04%
+  [-2.3, -2.2)   N=6061  matched=3716  eff=61.31%
+  [-2.2, -2.1)   N=7467  matched=4837  eff=64.78%
+  [-2.1, -2.0)   N=8953  matched=6284  eff=70.19%
+  [-2.0, -1.9)   N=10353  matched=7506  eff=72.50%
+  [-1.9, -1.8)   N=12517  matched=9857  eff=78.75%
+  [-1.8, -1.7)   N=14336  matched=11481  eff=80.09%
+  [-1.7, -1.6)   N=16301  matched=13428  eff=82.38%
+  [-1.6, -1.5)   N=19445  matched=16744  eff=86.11%
+  [-1.5, -1.4)   N=22397  matched=19358  eff=86.43%
+  [-1.4, -1.3)   N=24896  matched=22022  eff=88.46%
+  [-1.3, -1.2)   N=28016  matched=25020  eff=89.31%
+  [-1.2, -1.1)   N=30741  matched=27677  eff=90.03%
+  [-1.1, -1.0)   N=34391  matched=31173  eff=90.64%
+  [-1.0, -0.9)   N=36413  matched=33608  eff=92.30%
+  [-0.9, -0.8)   N=39054  matched=36122  eff=92.49%
+  [-0.8, -0.7)   N=42462  matched=39316  eff=92.59%
+  [-0.7, -0.6)   N=45688  matched=42588  eff=93.21%
+  [-0.6, -0.5)   N=46703  matched=43443  eff=93.02%
+  [-0.5, -0.4)   N=50507  matched=47119  eff=93.29%
+  [-0.4, -0.3)   N=50475  matched=47436  eff=93.98%
+  [-0.3, -0.2)   N=53784  matched=50555  eff=94.00%
+  [-0.2, -0.1)   N=53518  matched=50564  eff=94.48%
+  [-0.1, 0.0)   N=53227  matched=50249  eff=94.41%
+  [0.0, 0.1)   N=54302  matched=51176  eff=94.24%
+  [0.1, 0.2)   N=53133  matched=49922  eff=93.96%
+  [0.2, 0.3)   N=51875  matched=48680  eff=93.84%
+  [0.3, 0.4)   N=50567  matched=47668  eff=94.27%
+  [0.4, 0.5)   N=49263  matched=46185  eff=93.75%
+  [0.5, 0.6)   N=47298  matched=44280  eff=93.62%
+  [0.6, 0.7)   N=44840  matched=41713  eff=93.03%
+  [0.7, 0.8)   N=42987  matched=39837  eff=92.67%
+  [0.8, 0.9)   N=39060  matched=36021  eff=92.22%
+  [0.9, 1.0)   N=37620  matched=34535  eff=91.80%
+  [1.0, 1.1)   N=33645  matched=30600  eff=90.95%
+  [1.1, 1.2)   N=32116  matched=29071  eff=90.52%
+  [1.2, 1.3)   N=27493  matched=24616  eff=89.54%
+  [1.3, 1.4)   N=24860  matched=21803  eff=87.70%
+  [1.4, 1.5)   N=21979  matched=19046  eff=86.66%
+  [1.5, 1.6)   N=19320  matched=16484  eff=85.32%
+  [1.6, 1.7)   N=16250  matched=13509  eff=83.13%
+  [1.7, 1.8)   N=14820  matched=12111  eff=81.72%
+  [1.8, 1.9)   N=12389  matched=9609  eff=77.56%
+  [1.9, 2.0)   N=10814  matched=8157  eff=75.43%
+  [2.0, 2.1)   N=9386  matched=6586  eff=70.17%
+  [2.1, 2.2)   N=7902  matched=5207  eff=65.89%
+  [2.2, 2.3)   N=6240  matched=3809  eff=61.04%
+  [2.3, 2.4)   N=5162  matched=2741  eff=53.10%
+  [2.4, 2.5)   N=4559  matched=2295  eff=50.34%
+Total: 1434986.0 H bosons, 1290871.0 matched, 89.96%
+Info in <TCanvas::Print>: png file ./plots/fatjet_reconstruction_efficiency_vs_eta.png has been created
+Info in <TCanvas::Print>: pdf file ./plots/fatjet_reconstruction_efficiency_vs_eta.pdf has been created
+Saved histograms -> fatjet_histograms_results.root
