@@ -19,7 +19,7 @@ print("Using ROOT version:", ROOT.__version__)
 print("Using Delphes libraries found at:", DELPHES_PATH)
 
 debug = 0
-overwrite_results = False
+overwrite_results = True
 max_entries = None
 results_file = "fatjet_reconstruction_efficiency_results.root"
 histograms_file = "fatjet_histograms_results.root"
@@ -237,8 +237,8 @@ def fatjet_efficiency_advanced(inputRootFile, run_parallel=False, n_chunks=None,
 def calc_and_plot(tree, verbose=False):
 
     os.makedirs("./plots", exist_ok=True)
-    pt_bin_width = 50
-    pt_bins = list(range(200, 2000 + pt_bin_width, pt_bin_width))
+    pt_bin_width = 20
+    pt_bins = list(range(200, 1000 + pt_bin_width, pt_bin_width))
     n_pt_bins = len(pt_bins) - 1
     pt_bins_arr = array.array('d', pt_bins)
 
@@ -304,7 +304,7 @@ def calc_and_plot(tree, verbose=False):
 
         if first:
             eff_hist.SetTitle("Reconstruction efficiency; Truth p_{T} [GeV]; #epsilon_{reco.} (%)")
-            eff_hist.Draw("AP")
+            eff_hist.Draw("e1")
             ROOT.gPad.Update()
             eff_hist.GetPaintedGraph().SetMaximum(1.4)
             eff_hist.GetPaintedGraph().GetXaxis().SetRangeUser(0, 2000)
@@ -312,7 +312,7 @@ def calc_and_plot(tree, verbose=False):
             eff_hist.GetPaintedGraph().GetYaxis().SetNdivisions(1010, True)
             first = False
         else:
-            eff_hist.Draw("same P")
+            eff_hist.Draw("same e1")
 
     label = ROOT.TLatex()
     label.SetNDC()
@@ -421,15 +421,33 @@ def calc_and_plot(tree, verbose=False):
     f_out.Close()
     print(f"Saved histograms -> {histograms_file}")
 
-def main(inputRootFile, rp=True):
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(
+        description="Compute fatjet reconstruction efficiency from Delphes ROOT files."
+    )
+    parser.add_argument(
+        "inputRootFiles",
+        nargs="+",
+        help="One or more Delphes ROOT files (space-separated), e.g. f1.root f2.root f3.root",
+    )
+    parser.add_argument(
+        "--no-parallel",
+        action="store_true",
+        help="Disable parallel processing over entry ranges.",
+    )
+    args = parser.parse_args()
+
+    inputRootFiles = args.inputRootFiles
+    rp = not args.no_parallel
+
     if not overwrite_results and os.path.exists(results_file):
         f_in = ROOT.TFile.Open(results_file)
         tree = f_in.Get("results")
         tree._file = f_in
     else:
-        tree = fatjet_efficiency_advanced(inputRootFile, run_parallel=rp)
+        tree = fatjet_efficiency_advanced(inputRootFiles, run_parallel=rp)
     calc_and_plot(tree)
 
 if __name__ == "__main__":
-    files = [f"/data/ammelsayed/Framework/Samples/signal/FDM/Events/sig{m}/tag_1_delphes_events.root" for m in range(1000, 1000 + 50, 50)]
-    main(files)
+    main()
