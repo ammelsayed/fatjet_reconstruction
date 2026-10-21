@@ -19,7 +19,7 @@ print("Using ROOT version:", ROOT.__version__)
 print("Using Delphes libraries found at:", DELPHES_PATH)
 
 debug = 0
-overwrite_results = True
+overwrite_results = False
 max_entries = None
 results_file = "dijet_reconstruction_efficiency_results.root"
 histograms_file = "dijet_histograms_results.root"
@@ -49,6 +49,46 @@ boson_defs = {
     23: {"name": "Z", "mass": 91.2, "daughter_pids": {1,2,3,4,5}, "color": 4, "mass_window": (64.0, 106.0)},
     25: {"name": "H", "mass": 125.0, "daughter_pids": {5}, "color": 3, "mass_window": (110.0, 140.0)}
 }
+
+# Plot layout. The annotation block lives in the left margin and the legend in the
+# right margin, so that neither of them can overlap the data points. The canvas is
+# made wider to fit both of them.
+CANVAS_W = 1400
+CANVAS_H = 700
+MARGIN_LEFT = 0.27
+MARGIN_RIGHT = 0.28
+MARGIN_TOP = 0.05
+MARGIN_BOTTOM = 0.15
+TEXT_SIZE = 0.024
+LEGEND_TEXT_SIZE = 0.024
+TEXT_X = 0.015
+LEGEND_X1 = 0.730
+LEGEND_X2 = 0.995
+LEGEND_Y1 = 0.700
+LEGEND_Y2 = 0.960
+
+# The two selection requirements of the same boson share the boson colour and are
+# told apart by the line and marker style only, so that they read as a pair and stay
+# distinguishable when the figure is printed in black and white.
+LINE_STYLE_PLAIN = 1
+LINE_STYLE_MASSWINDOW = 2
+MARKER_STYLE_PLAIN = 20
+MARKER_STYLE_MASSWINDOW = 21
+
+def setup_canvas(name, title):
+    canvas = ROOT.TCanvas(name, title, CANVAS_W, CANVAS_H)
+    canvas.SetLeftMargin(MARGIN_LEFT)
+    canvas.SetRightMargin(MARGIN_RIGHT)
+    canvas.SetTopMargin(MARGIN_TOP)
+    canvas.SetBottomMargin(MARGIN_BOTTOM)
+    return canvas
+
+def draw_label_block(lines):
+    label = ROOT.TLatex()
+    label.SetNDC()
+    label.SetTextSize(TEXT_SIZE)
+    for text, y in lines:
+        label.DrawLatex(TEXT_X, y, text)
 
 BRANCHES = []
 for pid, props in boson_defs.items():
@@ -339,7 +379,7 @@ def calc_and_plot(tree, verbose=False):
         tree.Project(f"h_mass_resp_{name}", f"{name}_reco_m:{name}_truth_m", f"{name}_matched")
 
     # pT efficiency plot
-    c_pt = ROOT.TCanvas("c_eff_pt", "Dijet Efficiency vs pT", 650, 600)
+    c_pt = setup_canvas("c_eff_pt", "Dijet Efficiency vs pT")
     eff_hists_pt = []
     eff_hists_pt_mw = []
     first = True
@@ -372,9 +412,10 @@ def calc_and_plot(tree, verbose=False):
         eff_hist = ROOT.TEfficiency(h_mat, h_tot)
         eff_hist.SetStatisticOption(ROOT.TEfficiency.kFCP)
         eff_hist.SetConfidenceLevel(0.95)
-        eff_hist.SetMarkerStyle(20)
+        eff_hist.SetMarkerStyle(MARKER_STYLE_PLAIN)
         eff_hist.SetMarkerSize(0.8)
         eff_hist.SetLineWidth(2)
+        eff_hist.SetLineStyle(LINE_STYLE_PLAIN)
         eff_hist.SetFillColor(0)
         eff_hist.SetMarkerColor(props["color"])
         eff_hist.SetLineColor(props["color"])
@@ -383,9 +424,10 @@ def calc_and_plot(tree, verbose=False):
         eff_hist_mw = ROOT.TEfficiency(h_mat_mw, h_tot)
         eff_hist_mw.SetStatisticOption(ROOT.TEfficiency.kFCP)
         eff_hist_mw.SetConfidenceLevel(0.95)
-        eff_hist_mw.SetMarkerStyle(21)
+        eff_hist_mw.SetMarkerStyle(MARKER_STYLE_MASSWINDOW)
         eff_hist_mw.SetMarkerSize(0.8)
         eff_hist_mw.SetLineWidth(2)
+        eff_hist_mw.SetLineStyle(LINE_STYLE_MASSWINDOW)
         eff_hist_mw.SetFillColor(0)
         eff_hist_mw.SetMarkerColor(props["color"])
         eff_hist_mw.SetLineColor(props["color"])
@@ -395,7 +437,8 @@ def calc_and_plot(tree, verbose=False):
             eff_hist.SetTitle("Reconstruction efficiency; Truth p_{T} [GeV]; #epsilon_{reco.} (%)")
             eff_hist.Draw("AP")
             ROOT.gPad.Update()
-            eff_hist.GetPaintedGraph().SetMaximum(1.4)
+            eff_hist.GetPaintedGraph().SetMinimum(0.0)
+            eff_hist.GetPaintedGraph().SetMaximum(1.1)
             eff_hist.GetPaintedGraph().GetXaxis().SetRangeUser(0, 2000)
             eff_hist.GetPaintedGraph().GetXaxis().SetNdivisions(505, True)
             eff_hist.GetPaintedGraph().GetYaxis().SetNdivisions(1010, True)
@@ -405,20 +448,19 @@ def calc_and_plot(tree, verbose=False):
             eff_hist.Draw("same P")
             eff_hist_mw.Draw("same P")
 
-    label = ROOT.TLatex()
-    label.SetNDC()
-    label.SetTextSize(0.032)
-    label.DrawLatex(0.19, 0.88, "#scale[1.1]{#bf{#sqrt{s} = %s TeV, %s fb^{-1}}}" % (13.6, 400))
-    label.DrawLatex(0.19, 0.82, "Ak4-Dijet Reco. Efficiency (%)")
-    label.DrawLatex(0.19, 0.78, "#it{m_{N}} = 1.0 TeV")
-    label.DrawLatex(0.19, 0.74, "#DeltaR(q, j) #leq 0.4")
-    label.DrawLatex(0.19, 0.70, "Considering H #rightarrow b#bar{b} only.")
-    label.DrawLatex(0.19, 0.66, "Clopper-Pearson @ 95% CL")
+    draw_label_block([
+        ("#scale[1.1]{#bf{#sqrt{s} = %s TeV, %s fb^{-1}}}" % (13.6, 400), 0.940),
+        ("Ak4-Dijet Reco. Efficiency (%)", 0.893),
+        ("#it{m_{N}} = 1.0 TeV", 0.851),
+        ("#DeltaR(q, j) #leq 0.4", 0.809),
+        ("Considering H #rightarrow b#bar{b} only.", 0.767),
+        ("Clopper-Pearson @ 95% CL", 0.725),
+    ])
     
-    leg = ROOT.TLegend(0.55, 0.71, 0.95, 0.92)
+    leg = ROOT.TLegend(LEGEND_X1, LEGEND_Y1, LEGEND_X2, LEGEND_Y2)
     leg.SetFillColor(0)
     leg.SetBorderSize(0)
-    leg.SetTextSize(0.030)
+    leg.SetTextSize(LEGEND_TEXT_SIZE)
     leg.SetNColumns(2)
     for i, pid in enumerate(boson_defs):
         leg.AddEntry(eff_hists_pt[i], f'{boson_defs[pid]["name"]} (#it{{m}} = {boson_defs[pid]["mass"]} GeV)', "lp")
@@ -431,7 +473,7 @@ def calc_and_plot(tree, verbose=False):
     c_pt.Close()
 
     # eta efficiency plot
-    c_eta = ROOT.TCanvas("c_eff_eta", "Dijet Efficiency vs eta", 650, 600)
+    c_eta = setup_canvas("c_eff_eta", "Dijet Efficiency vs eta")
     eff_hists_eta = []
     eff_hists_eta_mw = []
     first = True
@@ -461,9 +503,10 @@ def calc_and_plot(tree, verbose=False):
         eff_hist = ROOT.TEfficiency(h_mat, h_tot)
         eff_hist.SetStatisticOption(ROOT.TEfficiency.kFCP)
         eff_hist.SetConfidenceLevel(0.95)
-        eff_hist.SetMarkerStyle(20)
+        eff_hist.SetMarkerStyle(MARKER_STYLE_PLAIN)
         eff_hist.SetMarkerSize(0.8)
         eff_hist.SetLineWidth(2)
+        eff_hist.SetLineStyle(LINE_STYLE_PLAIN)
         eff_hist.SetFillColor(0)
         eff_hist.SetMarkerColor(props["color"])
         eff_hist.SetLineColor(props["color"])
@@ -472,9 +515,10 @@ def calc_and_plot(tree, verbose=False):
         eff_hist_mw = ROOT.TEfficiency(h_mat_mw, h_tot)
         eff_hist_mw.SetStatisticOption(ROOT.TEfficiency.kFCP)
         eff_hist_mw.SetConfidenceLevel(0.95)
-        eff_hist_mw.SetMarkerStyle(21)
+        eff_hist_mw.SetMarkerStyle(MARKER_STYLE_MASSWINDOW)
         eff_hist_mw.SetMarkerSize(0.8)
         eff_hist_mw.SetLineWidth(2)
+        eff_hist_mw.SetLineStyle(LINE_STYLE_MASSWINDOW)
         eff_hist_mw.SetFillColor(0)
         eff_hist_mw.SetMarkerColor(props["color"])
         eff_hist_mw.SetLineColor(props["color"])
@@ -484,6 +528,7 @@ def calc_and_plot(tree, verbose=False):
             eff_hist.SetTitle("Reconstruction efficiency; Truth #eta; #epsilon_{reco.} (%)")
             eff_hist.Draw("AP")
             ROOT.gPad.Update()
+            eff_hist.GetPaintedGraph().SetMinimum(0.0)
             eff_hist.GetPaintedGraph().SetMaximum(1.3)
             eff_hist.GetPaintedGraph().GetXaxis().SetRangeUser(-2.5, 2.5)
             eff_hist.GetPaintedGraph().GetXaxis().SetNdivisions(1010, True)
@@ -494,20 +539,19 @@ def calc_and_plot(tree, verbose=False):
             eff_hist.Draw("same P")
             eff_hist_mw.Draw("same P")
 
-    label = ROOT.TLatex()
-    label.SetNDC()
-    label.SetTextSize(0.032)
-    label.DrawLatex(0.19, 0.88, "#scale[1.1]{#bf{#sqrt{s} = %s TeV, %s fb^{-1}}}" % (13.6, 400))
-    label.DrawLatex(0.19, 0.82, "Ak4-Dijet Reco. Efficiency (%)")
-    label.DrawLatex(0.19, 0.78, "#it{m_{N}} = 1.0 TeV")
-    label.DrawLatex(0.19, 0.74, "#DeltaR(q, j) #leq 0.4")
-    label.DrawLatex(0.19, 0.70, "Considering H #rightarrow b#bar{b} only.")
-    label.DrawLatex(0.19, 0.66, "Clopper-Pearson @ 95% CL")
+    draw_label_block([
+        ("#scale[1.1]{#bf{#sqrt{s} = %s TeV, %s fb^{-1}}}" % (13.6, 400), 0.940),
+        ("Ak4-Dijet Reco. Efficiency (%)", 0.893),
+        ("#it{m_{N}} = 1.0 TeV", 0.851),
+        ("#DeltaR(q, j) #leq 0.4", 0.809),
+        ("Considering H #rightarrow b#bar{b} only.", 0.767),
+        ("Clopper-Pearson @ 95% CL", 0.725),
+    ])
 
-    leg = ROOT.TLegend(0.55, 0.71, 0.95, 0.92)
+    leg = ROOT.TLegend(LEGEND_X1, LEGEND_Y1, LEGEND_X2, LEGEND_Y2)
     leg.SetFillColor(0)
     leg.SetBorderSize(0)
-    leg.SetTextSize(0.030)
+    leg.SetTextSize(LEGEND_TEXT_SIZE)
     leg.SetNColumns(2)
     for i, pid in enumerate(boson_defs):
         leg.AddEntry(eff_hists_eta[i], f'{boson_defs[pid]["name"]} (#it{{m}} = {boson_defs[pid]["mass"]} GeV)', "lp")
