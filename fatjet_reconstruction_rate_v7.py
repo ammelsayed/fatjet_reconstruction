@@ -39,19 +39,26 @@ mass_window_halfwidth = 25.0
 # Plot layout. The annotation block lives in the left margin and the legend in the
 # right margin, so that neither of them can overlap the data points. The canvas is
 # made wider to fit both of them.
-CANVAS_W = 1400
-CANVAS_H = 700
-MARGIN_LEFT = 0.27
-MARGIN_RIGHT = 0.28
-MARGIN_TOP = 0.05
-MARGIN_BOTTOM = 0.15
-TEXT_SIZE = 0.024
+CANVAS_W = 1050
+CANVAS_H = 680
+MARGIN_LEFT = 0.135
+MARGIN_RIGHT = 0.035
+MARGIN_TOP = 0.045
+MARGIN_BOTTOM = 0.125
+TEXT_SIZE = 0.022
 LEGEND_TEXT_SIZE = 0.024
-TEXT_X = 0.015
-LEGEND_X1 = 0.730
-LEGEND_X2 = 0.995
-LEGEND_Y1 = 0.700
-LEGEND_Y2 = 0.960
+
+# The annotation block and the legend are drawn inside the frame, in the empty band
+# between the top of the frame and the largest efficiency. The y axis of every plot
+# is therefore given a maximum of Y_MAX, so that this band is free of data points.
+Y_MAX = 1.45
+TEXT_X = MARGIN_LEFT + 0.040
+TEXT_Y_TOP = 1.0 - MARGIN_TOP - 0.052
+TEXT_DY = 0.036
+LEGEND_X1 = 1.0 - MARGIN_RIGHT - 0.46
+LEGEND_X2 = 1.0 - MARGIN_RIGHT - 0.02
+LEGEND_Y1 = 1.0 - MARGIN_TOP - 0.180
+LEGEND_Y2 = 1.0 - MARGIN_TOP - 0.040
 
 # The two selection requirements of the same boson share the boson colour and are
 # told apart by the line and marker style only, so that they read as a pair and stay
@@ -173,11 +180,14 @@ def suppress_x_errors(eff_hists):
             ex_high[i] = 0.0
 
 def draw_label_block(lines):
+    """Draw the annotation block inside the frame, below its top edge."""
     label = ROOT.TLatex()
     label.SetNDC()
     label.SetTextSize(TEXT_SIZE)
-    for text, y in lines:
+    y = TEXT_Y_TOP
+    for text in lines:
         label.DrawLatex(TEXT_X, y, text)
+        y -= TEXT_DY
 
 def build_chain(inputRootFile):
     chain = ROOT.TChain("Delphes")
@@ -426,7 +436,7 @@ def calc_and_plot(tree, verbose=False):
             eff_hist.Draw("APL")
             ROOT.gPad.Update()
             eff_hist.GetPaintedGraph().SetMinimum(0.0)
-            eff_hist.GetPaintedGraph().SetMaximum(1.1)
+            eff_hist.GetPaintedGraph().SetMaximum(Y_MAX)
             eff_hist.GetPaintedGraph().GetXaxis().SetRangeUser(150, 1150)
             eff_hist.GetPaintedGraph().GetXaxis().SetNdivisions(505, True)
             eff_hist.GetPaintedGraph().GetYaxis().SetNdivisions(1010, True)
@@ -441,12 +451,12 @@ def calc_and_plot(tree, verbose=False):
         ROOT.gPad.Update()
 
     draw_label_block([
-        ("#scale[1.1]{#bf{#sqrt{s} = %s TeV, %s fb^{-1}}}" % (13.6, 400), 0.940),
-        ("Ak10-Jet Reco. Efficiency (%)", 0.893),
-        ("#it{m_{N}} = 1.0 TeV", 0.851),
-        ("#DeltaR(J_{truth}, J_{reco.}) #leq 0.75", 0.809),
-        ("Considering H #rightarrow b#bar{b} only.", 0.767),
-        ("Clopper-Pearson @ 95% CL", 0.725),
+        "#scale[1.1]{#bf{#sqrt{s} = %s TeV, %s fb^{-1}}}" % (13.6, 400),
+        "Ak10-Jet Reco. Efficiency (%)",
+        "#it{m_{N}} = 1.0 TeV",
+        "#DeltaR(J_{truth}, J_{reco.}) #leq 0.75",
+        "Considering H #rightarrow b#bar{b} only.",
+        "Clopper-Pearson @ 95% CL",
     ])
 
     leg = ROOT.TLegend(LEGEND_X1, LEGEND_Y1, LEGEND_X2, LEGEND_Y2)
@@ -523,7 +533,7 @@ def calc_and_plot(tree, verbose=False):
             eff_hist.Draw("AP")
             ROOT.gPad.Update()
             eff_hist.GetPaintedGraph().SetMinimum(0.0)
-            eff_hist.GetPaintedGraph().SetMaximum(1.3)
+            eff_hist.GetPaintedGraph().SetMaximum(Y_MAX)
             eff_hist.GetPaintedGraph().GetXaxis().SetRangeUser(-2.5, 2.5)
             eff_hist.GetPaintedGraph().GetXaxis().SetNdivisions(1010, True)
             eff_hist.GetPaintedGraph().GetYaxis().SetNdivisions(1010, True)
@@ -538,12 +548,12 @@ def calc_and_plot(tree, verbose=False):
         ROOT.gPad.Update()
 
     draw_label_block([
-        ("#scale[1.1]{#bf{#sqrt{s} = %s TeV, %s fb^{-1}}}" % (13.6, 400), 0.940),
-        ("Ak10-Jet Reco. Efficiency (%)", 0.893),
-        ("#it{m_{N}} = 1.0 TeV", 0.851),
-        ("#DeltaR(J_{truth}, J_{reco.}) #leq 0.75", 0.809),
-        ("Considering H #rightarrow b#bar{b} only.", 0.767),
-        ("Clopper-Pearson @ 95% CL", 0.725),
+        "#scale[1.1]{#bf{#sqrt{s} = %s TeV, %s fb^{-1}}}" % (13.6, 400),
+        "Ak10-Jet Reco. Efficiency (%)",
+        "#it{m_{N}} = 1.0 TeV",
+        "#DeltaR(J_{truth}, J_{reco.}) #leq 0.75",
+        "Considering H #rightarrow b#bar{b} only.",
+        "Clopper-Pearson @ 95% CL",
     ])
 
     leg = ROOT.TLegend(LEGEND_X1, LEGEND_Y1, LEGEND_X2, LEGEND_Y2)

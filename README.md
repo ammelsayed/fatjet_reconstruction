@@ -14,7 +14,8 @@
 
 All the efficiency plots (fatjet v7 and dijet) share the same layout:
 
-- The canvas is 1400 x 700. The annotation block sits in the **left margin** and the legend in the **right margin**, so that neither of them can ever overlap the data points.
+- The canvas is 1050 x 680. The annotation block sits in the **upper left corner inside the frame** and the legend in the **upper right corner inside the frame**, so that neither of them can ever overlap the data points.
+- The y axis of every plot goes up to `Y_MAX = 1.45`, well above the largest efficiency, so that the whole band in which the annotation block and the legend are drawn is free of data points and error bars. The Clopper-Pearson bounds reach up to 1 for a bin with very few entries, which is what sets the requirement.
 - The two selection requirements of the same boson share the boson colour and are told apart by the **line and marker style only**: solid line with a filled marker for the plain reconstruction efficiency, dashed line with an open marker for the efficiency with the mass window. They therefore read as a pair, and stay distinguishable when the figure is printed in black and white.
 - The legend uses two columns, one per requirement.
 - The y-axis range is set explicitly. ROOT auto-ranges from the first graph that is drawn, which would clip the mass-window curve below the bottom of the frame.
