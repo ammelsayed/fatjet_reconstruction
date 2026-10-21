@@ -1,5 +1,6 @@
 import os
 import array
+import subprocess
 import ROOT
 import numpy as np
 from tqdm import tqdm
@@ -21,8 +22,8 @@ print("Using Delphes libraries found at:", DELPHES_PATH)
 debug = 0
 overwrite_results = True
 max_entries = None
-results_file = "fatjet_reconstruction_efficiency_results_v7.root"
-histograms_file = "fatjet_histograms_results_v7.root"
+results_file = "fatjet_reconstruction_efficiency_results.root"
+histograms_file = "fatjet_histograms_results.root"
 
 DeltaRCut = 0.75
 apply_fiducial_cuts_at_filling = True
@@ -57,8 +58,8 @@ LEGEND_Y2 = 0.960
 # distinguishable when the figure is printed in black and white.
 LINE_STYLE_PLAIN = 1
 LINE_STYLE_MASSWINDOW = 2
-MARKER_STYLE_PLAIN = 20
-MARKER_STYLE_MASSWINDOW = 21
+MARKER_STYLE_PLAIN = {24: 20, 23: 22, 25: 24}
+MARKER_STYLE_MASSWINDOW = {24: 21, 23: 23, 25: 25}
 
 boson_defs = {
     24: {"name": "W", "mass": 80.4, "daughter_pids": {1,2,3,4,5}, "color": 2, "mass_window": (55.4, 105.4)},
@@ -126,6 +127,23 @@ def get_fatjets(FatJet_branch):
         ak10jets.append((fj.P4(),fj.SoftDroppedP4[0].M()))
     return ak10jets
 
+def save_pdf(canvas, path):
+    """Save the canvas as PDF and crop the page to the drawing.
+
+    ROOT always writes the PDF on a fixed A4 page and leaves the drawing in a
+    corner of it, which makes the exported figure look broken. The page is
+    cropped to the content afterwards.
+    """
+    canvas.SaveAs(path)
+    try:
+        subprocess.run(
+            ["gs", "-q", "-dNOPAUSE", "-dBATCH", "-sDEVICE=pdfwrite",
+             "-dEPSCrop", "-dUseCropBox", "-o", path + ".tmp", path],
+            check=True, timeout=300)
+        os.replace(path + ".tmp", path)
+    except Exception as exc:
+        print(f"WARNING: could not crop the PDF {path}: {exc}")
+
 def setup_canvas(name, title):
     canvas = ROOT.TCanvas(name, title, CANVAS_W, CANVAS_H)
     canvas.SetLeftMargin(MARGIN_LEFT)
@@ -133,6 +151,26 @@ def setup_canvas(name, title):
     canvas.SetTopMargin(MARGIN_TOP)
     canvas.SetBottomMargin(MARGIN_BOTTOM)
     return canvas
+
+def suppress_x_errors(eff_hists):
+    """Drop the horizontal (bin width) error bars, keeping the vertical ones.
+
+    ROOT draws them by default, which turns a binned efficiency plot into a
+    staircase of overlapping bars. Every draw of a TEfficiency puts the bin width
+    back, and TLegend draws the object again for each legend entry, so this has
+    to be done once all the curves and the legend are on the canvas.
+    """
+    for eff_hist in eff_hists:
+        graph = eff_hist.GetPaintedGraph()
+        if not graph:
+            continue
+        ex_low = graph.GetEXlow()
+        ex_high = graph.GetEXhigh()
+        if not ex_low or not ex_high:
+            continue
+        for i in range(graph.GetN()):
+            ex_low[i] = 0.0
+            ex_high[i] = 0.0
 
 def draw_label_block(lines):
     label = ROOT.TLatex()
@@ -362,8 +400,8 @@ def calc_and_plot(tree, verbose=False):
         eff_hist = ROOT.TEfficiency(h_mat, h_tot)
         eff_hist.SetStatisticOption(ROOT.TEfficiency.kFCP)
         eff_hist.SetConfidenceLevel(0.95)
-        eff_hist.SetMarkerStyle(20)
-        eff_hist.SetMarkerSize(0.8)
+        eff_hist.SetMarkerStyle(MARKER_STYLE_PLAIN[pid])
+        eff_hist.SetMarkerSize(1.0)
         eff_hist.SetLineWidth(2)
         eff_hist.SetFillColor(0)
         eff_hist.SetMarkerColor(props["color"])
@@ -374,8 +412,8 @@ def calc_and_plot(tree, verbose=False):
         eff_hist_mw = ROOT.TEfficiency(h_mat_mw, h_tot)
         eff_hist_mw.SetStatisticOption(ROOT.TEfficiency.kFCP)
         eff_hist_mw.SetConfidenceLevel(0.95)
-        eff_hist_mw.SetMarkerStyle(MARKER_STYLE_MASSWINDOW)
-        eff_hist_mw.SetMarkerSize(0.8)
+        eff_hist_mw.SetMarkerStyle(MARKER_STYLE_MASSWINDOW[pid])
+        eff_hist_mw.SetMarkerSize(1.0)
         eff_hist_mw.SetLineWidth(2)
         eff_hist_mw.SetLineStyle(LINE_STYLE_MASSWINDOW)
         eff_hist_mw.SetFillColor(0)
@@ -385,18 +423,22 @@ def calc_and_plot(tree, verbose=False):
 
         if first:
             eff_hist.SetTitle("Reconstruction efficiency; Truth p_{T} [GeV]; #epsilon_{reco.} (%)")
-            eff_hist.Draw("AP")
+            eff_hist.Draw("APL")
             ROOT.gPad.Update()
             eff_hist.GetPaintedGraph().SetMinimum(0.0)
             eff_hist.GetPaintedGraph().SetMaximum(1.1)
             eff_hist.GetPaintedGraph().GetXaxis().SetRangeUser(150, 1150)
             eff_hist.GetPaintedGraph().GetXaxis().SetNdivisions(505, True)
             eff_hist.GetPaintedGraph().GetYaxis().SetNdivisions(1010, True)
-            eff_hist_mw.Draw("same P")
+            eff_hist_mw.Draw("same PL")
+            ROOT.gPad.Update()
             first = False
         else:
-            eff_hist.Draw("same P")
-            eff_hist_mw.Draw("same P")
+            eff_hist.Draw("same PL")
+            ROOT.gPad.Update()
+            eff_hist_mw.Draw("same PL")
+            ROOT.gPad.Update()
+        ROOT.gPad.Update()
 
     draw_label_block([
         ("#scale[1.1]{#bf{#sqrt{s} = %s TeV, %s fb^{-1}}}" % (13.6, 400), 0.940),
@@ -417,9 +459,11 @@ def calc_and_plot(tree, verbose=False):
         leg.AddEntry(eff_hists_pt_mw[i], f'{boson_defs[pid]["name"]} + #it{{m_{{SD}}}} window', "lp")
     leg.Draw()
 
+    suppress_x_errors(eff_hists_pt + eff_hists_pt_mw)
+
     c_pt.Update()
-    c_pt.SaveAs("./plots/fatjet_reconstruction_efficiency_vs_pt_v7.png")
-    c_pt.SaveAs("./plots/fatjet_reconstruction_efficiency_vs_pt_v7.pdf")
+    c_pt.SaveAs("./plots/fatjet_reconstruction_efficiency_vs_pt.png")
+    save_pdf(c_pt, "./plots/fatjet_reconstruction_efficiency_vs_pt.pdf")
     c_pt.Close()
 
     # eta efficiency plot
@@ -453,8 +497,8 @@ def calc_and_plot(tree, verbose=False):
         eff_hist = ROOT.TEfficiency(h_mat, h_tot)
         eff_hist.SetStatisticOption(ROOT.TEfficiency.kFCP)
         eff_hist.SetConfidenceLevel(0.95)
-        eff_hist.SetMarkerStyle(20)
-        eff_hist.SetMarkerSize(0.8)
+        eff_hist.SetMarkerStyle(MARKER_STYLE_PLAIN[pid])
+        eff_hist.SetMarkerSize(1.0)
         eff_hist.SetLineWidth(2)
         eff_hist.SetFillColor(0)
         eff_hist.SetMarkerColor(props["color"])
@@ -465,8 +509,8 @@ def calc_and_plot(tree, verbose=False):
         eff_hist_mw = ROOT.TEfficiency(h_mat_mw, h_tot)
         eff_hist_mw.SetStatisticOption(ROOT.TEfficiency.kFCP)
         eff_hist_mw.SetConfidenceLevel(0.95)
-        eff_hist_mw.SetMarkerStyle(MARKER_STYLE_MASSWINDOW)
-        eff_hist_mw.SetMarkerSize(0.8)
+        eff_hist_mw.SetMarkerStyle(MARKER_STYLE_MASSWINDOW[pid])
+        eff_hist_mw.SetMarkerSize(1.0)
         eff_hist_mw.SetLineWidth(2)
         eff_hist_mw.SetLineStyle(LINE_STYLE_MASSWINDOW)
         eff_hist_mw.SetFillColor(0)
@@ -484,10 +528,14 @@ def calc_and_plot(tree, verbose=False):
             eff_hist.GetPaintedGraph().GetXaxis().SetNdivisions(1010, True)
             eff_hist.GetPaintedGraph().GetYaxis().SetNdivisions(1010, True)
             eff_hist_mw.Draw("same P")
+            ROOT.gPad.Update()
             first = False
         else:
             eff_hist.Draw("same P")
+            ROOT.gPad.Update()
             eff_hist_mw.Draw("same P")
+            ROOT.gPad.Update()
+        ROOT.gPad.Update()
 
     draw_label_block([
         ("#scale[1.1]{#bf{#sqrt{s} = %s TeV, %s fb^{-1}}}" % (13.6, 400), 0.940),
@@ -504,13 +552,15 @@ def calc_and_plot(tree, verbose=False):
     leg.SetTextSize(LEGEND_TEXT_SIZE)
     leg.SetNColumns(2)
     for i, pid in enumerate(boson_defs):
-        leg.AddEntry(eff_hists_eta[i], f'{boson_defs[pid]["name"]} (#it{{m}} = {boson_defs[pid]["mass"]} GeV)', "lp")
-        leg.AddEntry(eff_hists_eta_mw[i], f'{boson_defs[pid]["name"]} + #it{{m_{{SD}}}} window', "lp")
+        leg.AddEntry(eff_hists_eta[i], f'{boson_defs[pid]["name"]} (#it{{m}} = {boson_defs[pid]["mass"]} GeV)', "p")
+        leg.AddEntry(eff_hists_eta_mw[i], f'{boson_defs[pid]["name"]} + #it{{m_{{SD}}}} window', "p")
     leg.Draw()
 
+    suppress_x_errors(eff_hists_eta + eff_hists_eta_mw)
+
     c_eta.Update()
-    c_eta.SaveAs("./plots/fatjet_reconstruction_efficiency_vs_eta_v7.png")
-    c_eta.SaveAs("./plots/fatjet_reconstruction_efficiency_vs_eta_v7.pdf")
+    c_eta.SaveAs("./plots/fatjet_reconstruction_efficiency_vs_eta.png")
+    save_pdf(c_eta, "./plots/fatjet_reconstruction_efficiency_vs_eta.pdf")
     c_eta.Close()
 
     # set titles on response hists and save all to file
