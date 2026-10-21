@@ -150,6 +150,9 @@ def fatjet_efficiency(inputRootFile, start_entry=0, end_entry=None, progress=Tru
         for pid, p in all_gen:
             name = boson_defs[pid]["name"]
 
+            for branch_name in BRANCHES:
+                b[branch_name][0] = 0.0
+
             b[f"{name}_truth_pt"][0] = p.PT
             b[f"{name}_truth_eta"][0] = p.Eta
             b[f"{name}_truth_phi"][0] = p.Phi
@@ -260,9 +263,9 @@ def calc_and_plot(tree, verbose=False):
             "pt_response": ROOT.TH2D(f"h_pt_resp_{name}", "", n_pt_bins, pt_bins_arr, 100, 0, 2),
             "mass_response": ROOT.TH2D(f"h_mass_resp_{name}", "", 100, 0, 200, 100, 0, 200),
         }
-        tree.Project(f"h_total_pt_{name}", f"{name}_truth_pt")
+        tree.Project(f"h_total_pt_{name}", f"{name}_truth_pt", f"{name}_truth_pt > 0")
         tree.Project(f"h_matched_pt_{name}", f"{name}_truth_pt", f"{name}_matched")
-        tree.Project(f"h_total_eta_{name}", f"{name}_truth_eta")
+        tree.Project(f"h_total_eta_{name}", f"{name}_truth_eta", f"{name}_truth_pt > 0")
         tree.Project(f"h_matched_eta_{name}", f"{name}_truth_eta", f"{name}_matched")
         tree.Project(f"h_pt_resp_{name}", f"{name}_reco_pt/{name}_truth_pt:{name}_truth_pt", f"{name}_matched")
         tree.Project(f"h_mass_resp_{name}", f"{name}_reco_m:{name}_truth_m", f"{name}_matched")
