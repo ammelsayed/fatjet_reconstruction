@@ -236,8 +236,10 @@ def fatjet_efficiency_advanced(inputRootFile, run_parallel=False, n_chunks=None,
 
 def calc_and_plot(tree, verbose=False):
 
+    ROOT.gStyle.SetEndErrorSize(2)
+
     os.makedirs("./plots", exist_ok=True)
-    pt_bin_width = 20
+    pt_bin_width = 100
     pt_bins = list(range(200, 1000 + pt_bin_width, pt_bin_width))
     n_pt_bins = len(pt_bins) - 1
     pt_bins_arr = array.array('d', pt_bins)
