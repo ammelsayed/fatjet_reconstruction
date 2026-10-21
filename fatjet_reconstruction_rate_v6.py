@@ -297,7 +297,7 @@ def calc_and_plot(tree, verbose=False):
                 print(f"No {name} bosons found.")
 
         eff_hist = ROOT.TEfficiency(h_mat, h_tot)
-        # eff_hist.SetStatisticOption(ROOT.TEfficiency.kFCP)
+        eff_hist.SetStatisticOption(ROOT.TEfficiency.kFCP)
         eff_hist.SetConfidenceLevel(0.95)
         eff_hist.SetMarkerStyle(20)
         eff_hist.SetMarkerSize(0.8)
@@ -309,7 +309,7 @@ def calc_and_plot(tree, verbose=False):
 
         if first:
             eff_hist.SetTitle("Reconstruction efficiency; Truth p_{T} [GeV]; #epsilon_{reco.} (%)")
-            eff_hist.Draw("e1")
+            eff_hist.Draw("AP")
             ROOT.gPad.Update()
             eff_hist.GetPaintedGraph().SetMaximum(1.4)
             eff_hist.GetPaintedGraph().GetXaxis().SetRangeUser(0, 2000)
@@ -317,7 +317,7 @@ def calc_and_plot(tree, verbose=False):
             eff_hist.GetPaintedGraph().GetYaxis().SetNdivisions(1010, True)
             first = False
         else:
-            eff_hist.Draw("same e1")
+            eff_hist.Draw("same P")
 
     label = ROOT.TLatex()
     label.SetNDC()
@@ -366,7 +366,7 @@ def calc_and_plot(tree, verbose=False):
                 print(f"Total: {total:.1f} {name} bosons, {matched:.1f} matched, {matched/total*100:.2f}%")
 
         eff_hist = ROOT.TEfficiency(h_mat, h_tot)
-        # eff_hist.SetStatisticOption(ROOT.TEfficiency.kFCP)
+        eff_hist.SetStatisticOption(ROOT.TEfficiency.kFCP)
         eff_hist.SetConfidenceLevel(0.95)
         eff_hist.SetMarkerStyle(20)
         eff_hist.SetMarkerSize(0.8)
