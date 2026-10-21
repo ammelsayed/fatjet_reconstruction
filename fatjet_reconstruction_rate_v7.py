@@ -20,7 +20,7 @@ print("Using ROOT version:", ROOT.__version__)
 print("Using Delphes libraries found at:", DELPHES_PATH)
 
 debug = 0
-overwrite_results = True
+overwrite_results = False
 max_entries = None
 results_file = "fatjet_reconstruction_efficiency_results.root"
 histograms_file = "fatjet_histograms_results.root"
@@ -339,12 +339,150 @@ def fatjet_efficiency_advanced(inputRootFile, run_parallel=False, n_chunks=None,
 
     return merge_outputs(results)
 
+
+PLOT_SETTINGS = {
+    "pt": {
+        "x_title": "Truth p_{T} [GeV]",
+        "x_range": (150, 1150),
+        "x_divisions": 505,
+        "draw_option": "APL",
+        "same_option": "same PL",
+        "legend_option": "lp",
+        "canvas_title": "FatJet Efficiency vs pT",
+        "output": "./plots/fatjet_reconstruction_efficiency_vs_pt",
+    },
+    "eta": {
+        "x_title": "Truth #eta",
+        "x_range": (-2.5, 2.5),
+        "x_divisions": 1010,
+        "draw_option": "AP",
+        "same_option": "same P",
+        "legend_option": "p",
+        "canvas_title": "FatJet Efficiency vs eta",
+        "output": "./plots/fatjet_reconstruction_efficiency_vs_eta",
+    },
+}
+
+def make_efficiency(h_mat, h_tot, pid, with_mass_window):
+    """Efficiency of the reconstruction of one boson, with or without mass window."""
+    props = boson_defs[pid]
+    eff = ROOT.TEfficiency(h_mat, h_tot)
+    eff.SetStatisticOption(ROOT.TEfficiency.kFCP)
+    eff.SetConfidenceLevel(0.95)
+    eff.SetMarkerStyle(MARKER_STYLE_MASSWINDOW[pid] if with_mass_window else MARKER_STYLE_PLAIN[pid])
+    eff.SetMarkerSize(1.0)
+    eff.SetLineWidth(2)
+    eff.SetLineStyle(LINE_STYLE_MASSWINDOW if with_mass_window else LINE_STYLE_PLAIN)
+    eff.SetFillColor(0)
+    eff.SetMarkerColor(props["color"])
+    eff.SetLineColor(props["color"])
+    return eff
+
+def print_efficiency_table(all_hists, kind, bins):
+    """Print the efficiency of every boson in the given binning."""
+    for pid, props in boson_defs.items():
+        name = props["name"]
+        h_tot = all_hists[pid]["total_" + kind]
+        h_mat = all_hists[pid]["matched_" + kind]
+        h_mat_mw = all_hists[pid]["matched_" + kind + "_mw"]
+        total = h_tot.Integral()
+        matched = h_mat.Integral()
+        matched_mw = h_mat_mw.Integral()
+        print(f"\nEfficiency vs {kind} for {name}:")
+        for i in range(h_tot.GetNbinsX()):
+            n_tot = h_tot.GetBinContent(i + 1)
+            n_mat = h_mat.GetBinContent(i + 1)
+            n_mw = h_mat_mw.GetBinContent(i + 1)
+            if n_tot == 0:
+                continue
+            eff = n_mat / n_tot * 100
+            eff_mw = n_mw / n_tot * 100
+            print(f"  [{bins[i]:.1f}, {bins[i+1]:.1f})   N={n_tot:.0f}  matched={n_mat:.0f}  eff={eff:.2f}%  matched_mw={n_mw:.0f}  eff_mw={eff_mw:.2f}%")
+        if total > 0:
+            print(f"Total: {total:.1f} {name} bosons, {matched:.1f} matched ({matched/total*100:.2f}%), {matched_mw:.1f} matched within mass window ({matched_mw/total*100:.2f}%)")
+        else:
+            print(f"No {name} bosons found.")
+
+def plot_efficiency(all_hists, pids, kind, output=None, canvas_name=None, n_columns=2):
+    """Draw the reconstruction efficiency of the given bosons and save the figure.
+
+    Every boson is drawn twice: on its own and with the mass window of the channel
+    applied. The two are told apart by the line and marker style, and they share
+    the colour of the boson.
+    """
+    settings = PLOT_SETTINGS[kind]
+    if output is None:
+        output = settings["output"]
+    if canvas_name is None:
+        canvas_name = "c_eff_" + kind
+
+    canvas = setup_canvas(canvas_name, settings["canvas_title"])
+    eff_hists = []
+    eff_hists_mw = []
+    first = True
+    for pid in pids:
+        h_tot = all_hists[pid]["total_" + kind]
+        h_mat = all_hists[pid]["matched_" + kind]
+        h_mat_mw = all_hists[pid]["matched_" + kind + "_mw"]
+
+        eff_hist = make_efficiency(h_mat, h_tot, pid, False)
+        eff_hists.append(eff_hist)
+        eff_hist_mw = make_efficiency(h_mat_mw, h_tot, pid, True)
+        eff_hists_mw.append(eff_hist_mw)
+
+        if first:
+            eff_hist.SetTitle("Reconstruction efficiency; " + settings["x_title"] + "; #epsilon_{reco.} (%)")
+            eff_hist.Draw(settings["draw_option"])
+            ROOT.gPad.Update()
+            eff_hist.GetPaintedGraph().SetMinimum(0.0)
+            eff_hist.GetPaintedGraph().SetMaximum(Y_MAX)
+            eff_hist.GetPaintedGraph().GetXaxis().SetRangeUser(*settings["x_range"])
+            eff_hist.GetPaintedGraph().GetXaxis().SetNdivisions(settings["x_divisions"], True)
+            eff_hist.GetPaintedGraph().GetYaxis().SetNdivisions(1010, True)
+            eff_hist_mw.Draw(settings["same_option"])
+            ROOT.gPad.Update()
+            first = False
+        else:
+            eff_hist.Draw(settings["same_option"])
+            ROOT.gPad.Update()
+            eff_hist_mw.Draw(settings["same_option"])
+            ROOT.gPad.Update()
+        ROOT.gPad.Update()
+
+    draw_label_block([
+        "#scale[1.1]{#bf{#sqrt{s} = %s TeV, %s fb^{-1}}}" % (13.6, 400),
+        "Ak10-Jet Reco. Efficiency (%)",
+        "#it{m_{N}} = 1.0 TeV",
+        "#DeltaR(J_{truth}, J_{reco.}) #leq 0.75",
+        "Considering H #rightarrow b#bar{b} only.",
+        "Clopper-Pearson @ 95% CL",
+    ])
+
+    legend_width = 0.46 if len(pids) > 1 else 0.26
+    leg = ROOT.TLegend(1.0 - MARGIN_RIGHT - legend_width, LEGEND_Y1, 1.0 - MARGIN_RIGHT - 0.02, LEGEND_Y2)
+    leg.SetFillColor(0)
+    leg.SetBorderSize(0)
+    leg.SetTextSize(LEGEND_TEXT_SIZE)
+    leg.SetNColumns(n_columns)
+    for i, pid in enumerate(pids):
+        name = boson_defs[pid]["name"]
+        leg.AddEntry(eff_hists[i], f'{name} (#it{{m}} = {boson_defs[pid]["mass"]} GeV)', settings["legend_option"])
+        leg.AddEntry(eff_hists_mw[i], f'{name} + #it{{m_{{SD}}}} window', settings["legend_option"])
+    leg.Draw()
+
+    suppress_x_errors(eff_hists + eff_hists_mw)
+
+    canvas.Update()
+    canvas.SaveAs(output + ".png")
+    save_pdf(canvas, output + ".pdf")
+    canvas.Close()
+
 def calc_and_plot(tree, verbose=False):
 
     ROOT.gStyle.SetEndErrorSize(2)
 
     os.makedirs("./plots", exist_ok=True)
-    pt_bin_width = 100
+    pt_bin_width = 20
     pt_bins = list(range(200, 1000 + pt_bin_width, pt_bin_width))
     n_pt_bins = len(pt_bins) - 1
     pt_bins_arr = array.array('d', pt_bins)
@@ -376,202 +514,21 @@ def calc_and_plot(tree, verbose=False):
         tree.Project(f"h_pt_resp_{name}", f"{name}_reco_pt/{name}_truth_pt:{name}_truth_pt", f"{name}_matched")
         tree.Project(f"h_mass_resp_{name}", f"{name}_reco_m:{name}_truth_m", f"{name}_matched")
 
-    # pT efficiency plot
-    c_pt = setup_canvas("c_eff_pt", "FatJet Efficiency vs pT")
-    eff_hists_pt = []
-    eff_hists_pt_mw = []
-    first = True
+    if verbose:
+        print_efficiency_table(all_hists, "pt", pt_bins)
+        print_efficiency_table(all_hists, "eta", eta_bins)
+
+    # all the bosons on one figure, and then one figure per boson
+    plot_efficiency(all_hists, list(boson_defs), "pt")
+    plot_efficiency(all_hists, list(boson_defs), "eta")
     for pid, props in boson_defs.items():
         name = props["name"]
-        h_tot = all_hists[pid]["total_pt"]
-        h_mat = all_hists[pid]["matched_pt"]
-        h_mat_mw = all_hists[pid]["matched_pt_mw"]
-
-        if verbose:
-            total = h_tot.Integral()
-            matched = h_mat.Integral()
-            matched_mw = h_mat_mw.Integral()
-            print(f"\nEfficiency vs pT for {name}:")
-            print("pT bin [GeV]   N_total     N_matched   Eff (%)     N_matched_mw  Eff_mw (%)")
-            for i in range(n_pt_bins):
-                n_tot = h_tot.GetBinContent(i + 1)
-                n_mat = h_mat.GetBinContent(i + 1)
-                n_mw = h_mat_mw.GetBinContent(i + 1)
-                if n_tot == 0:
-                    continue
-                eff = n_mat / n_tot * 100
-                eff_mw = n_mw / n_tot * 100
-                print(f"{pt_bins[i]:3d}-{pt_bins[i+1]:3d}     {n_tot:8.1f}      {n_mat:8.1f}      {eff:6.2f}      {n_mw:8.1f}     {eff_mw:6.2f}")
-            if total > 0:
-                print(f"Total: {total:.1f} {name} bosons, {matched:.1f} matched ({matched/total*100:.2f}%), {matched_mw:.1f} matched within mass window ({matched_mw/total*100:.2f}%)")
-            else:
-                print(f"No {name} bosons found.")
-
-        eff_hist = ROOT.TEfficiency(h_mat, h_tot)
-        eff_hist.SetStatisticOption(ROOT.TEfficiency.kFCP)
-        eff_hist.SetConfidenceLevel(0.95)
-        eff_hist.SetMarkerStyle(MARKER_STYLE_PLAIN[pid])
-        eff_hist.SetMarkerSize(1.0)
-        eff_hist.SetLineWidth(2)
-        eff_hist.SetFillColor(0)
-        eff_hist.SetMarkerColor(props["color"])
-        eff_hist.SetLineColor(props["color"])
-        eff_hist.SetLineStyle(LINE_STYLE_PLAIN)
-        eff_hists_pt.append(eff_hist)
-
-        eff_hist_mw = ROOT.TEfficiency(h_mat_mw, h_tot)
-        eff_hist_mw.SetStatisticOption(ROOT.TEfficiency.kFCP)
-        eff_hist_mw.SetConfidenceLevel(0.95)
-        eff_hist_mw.SetMarkerStyle(MARKER_STYLE_MASSWINDOW[pid])
-        eff_hist_mw.SetMarkerSize(1.0)
-        eff_hist_mw.SetLineWidth(2)
-        eff_hist_mw.SetLineStyle(LINE_STYLE_MASSWINDOW)
-        eff_hist_mw.SetFillColor(0)
-        eff_hist_mw.SetMarkerColor(props["color"])
-        eff_hist_mw.SetLineColor(props["color"])
-        eff_hists_pt_mw.append(eff_hist_mw)
-
-        if first:
-            eff_hist.SetTitle("Reconstruction efficiency; Truth p_{T} [GeV]; #epsilon_{reco.} (%)")
-            eff_hist.Draw("APL")
-            ROOT.gPad.Update()
-            eff_hist.GetPaintedGraph().SetMinimum(0.0)
-            eff_hist.GetPaintedGraph().SetMaximum(Y_MAX)
-            eff_hist.GetPaintedGraph().GetXaxis().SetRangeUser(150, 1150)
-            eff_hist.GetPaintedGraph().GetXaxis().SetNdivisions(505, True)
-            eff_hist.GetPaintedGraph().GetYaxis().SetNdivisions(1010, True)
-            eff_hist_mw.Draw("same PL")
-            ROOT.gPad.Update()
-            first = False
-        else:
-            eff_hist.Draw("same PL")
-            ROOT.gPad.Update()
-            eff_hist_mw.Draw("same PL")
-            ROOT.gPad.Update()
-        ROOT.gPad.Update()
-
-    draw_label_block([
-        "#scale[1.1]{#bf{#sqrt{s} = %s TeV, %s fb^{-1}}}" % (13.6, 400),
-        "Ak10-Jet Reco. Efficiency (%)",
-        "#it{m_{N}} = 1.0 TeV",
-        "#DeltaR(J_{truth}, J_{reco.}) #leq 0.75",
-        "Considering H #rightarrow b#bar{b} only.",
-        "Clopper-Pearson @ 95% CL",
-    ])
-
-    leg = ROOT.TLegend(LEGEND_X1, LEGEND_Y1, LEGEND_X2, LEGEND_Y2)
-    leg.SetFillColor(0)
-    leg.SetBorderSize(0)
-    leg.SetTextSize(LEGEND_TEXT_SIZE)
-    leg.SetNColumns(2)
-    for i, pid in enumerate(boson_defs):
-        leg.AddEntry(eff_hists_pt[i], f'{boson_defs[pid]["name"]} (#it{{m}} = {boson_defs[pid]["mass"]} GeV)', "lp")
-        leg.AddEntry(eff_hists_pt_mw[i], f'{boson_defs[pid]["name"]} + #it{{m_{{SD}}}} window', "lp")
-    leg.Draw()
-
-    suppress_x_errors(eff_hists_pt + eff_hists_pt_mw)
-
-    c_pt.Update()
-    c_pt.SaveAs("./plots/fatjet_reconstruction_efficiency_vs_pt.png")
-    save_pdf(c_pt, "./plots/fatjet_reconstruction_efficiency_vs_pt.pdf")
-    c_pt.Close()
-
-    # eta efficiency plot
-    c_eta = setup_canvas("c_eff_eta", "FatJet Efficiency vs eta")
-    eff_hists_eta = []
-    eff_hists_eta_mw = []
-    first = True
-    for pid, props in boson_defs.items():
-        name = props["name"]
-        h_tot = all_hists[pid]["total_eta"]
-        h_mat = all_hists[pid]["matched_eta"]
-        h_mat_mw = all_hists[pid]["matched_eta_mw"]
-
-        if verbose:
-            total = h_tot.Integral()
-            matched = h_mat.Integral()
-            matched_mw = h_mat_mw.Integral()
-            print(f"\nEfficiency vs eta for {name}:")
-            for i in range(n_eta_bins):
-                n_tot = h_tot.GetBinContent(i + 1)
-                n_mat = h_mat.GetBinContent(i + 1)
-                n_mw = h_mat_mw.GetBinContent(i + 1)
-                if n_tot == 0:
-                    continue
-                eff = n_mat / n_tot * 100
-                eff_mw = n_mw / n_tot * 100
-                print(f"  [{eta_bins[i]:.1f}, {eta_bins[i+1]:.1f})   N={n_tot:.0f}  matched={n_mat:.0f}  eff={eff:.2f}%  matched_mw={n_mw:.0f}  eff_mw={eff_mw:.2f}%")
-            if total > 0:
-                print(f"Total: {total:.1f} {name} bosons, {matched:.1f} matched ({matched/total*100:.2f}%), {matched_mw:.1f} matched within mass window ({matched_mw/total*100:.2f}%)")
-
-        eff_hist = ROOT.TEfficiency(h_mat, h_tot)
-        eff_hist.SetStatisticOption(ROOT.TEfficiency.kFCP)
-        eff_hist.SetConfidenceLevel(0.95)
-        eff_hist.SetMarkerStyle(MARKER_STYLE_PLAIN[pid])
-        eff_hist.SetMarkerSize(1.0)
-        eff_hist.SetLineWidth(2)
-        eff_hist.SetFillColor(0)
-        eff_hist.SetMarkerColor(props["color"])
-        eff_hist.SetLineColor(props["color"])
-        eff_hist.SetLineStyle(LINE_STYLE_PLAIN)
-        eff_hists_eta.append(eff_hist)
-
-        eff_hist_mw = ROOT.TEfficiency(h_mat_mw, h_tot)
-        eff_hist_mw.SetStatisticOption(ROOT.TEfficiency.kFCP)
-        eff_hist_mw.SetConfidenceLevel(0.95)
-        eff_hist_mw.SetMarkerStyle(MARKER_STYLE_MASSWINDOW[pid])
-        eff_hist_mw.SetMarkerSize(1.0)
-        eff_hist_mw.SetLineWidth(2)
-        eff_hist_mw.SetLineStyle(LINE_STYLE_MASSWINDOW)
-        eff_hist_mw.SetFillColor(0)
-        eff_hist_mw.SetMarkerColor(props["color"])
-        eff_hist_mw.SetLineColor(props["color"])
-        eff_hists_eta_mw.append(eff_hist_mw)
-
-        if first:
-            eff_hist.SetTitle("Reconstruction efficiency; Truth #eta; #epsilon_{reco.} (%)")
-            eff_hist.Draw("AP")
-            ROOT.gPad.Update()
-            eff_hist.GetPaintedGraph().SetMinimum(0.0)
-            eff_hist.GetPaintedGraph().SetMaximum(Y_MAX)
-            eff_hist.GetPaintedGraph().GetXaxis().SetRangeUser(-2.5, 2.5)
-            eff_hist.GetPaintedGraph().GetXaxis().SetNdivisions(1010, True)
-            eff_hist.GetPaintedGraph().GetYaxis().SetNdivisions(1010, True)
-            eff_hist_mw.Draw("same P")
-            ROOT.gPad.Update()
-            first = False
-        else:
-            eff_hist.Draw("same P")
-            ROOT.gPad.Update()
-            eff_hist_mw.Draw("same P")
-            ROOT.gPad.Update()
-        ROOT.gPad.Update()
-
-    draw_label_block([
-        "#scale[1.1]{#bf{#sqrt{s} = %s TeV, %s fb^{-1}}}" % (13.6, 400),
-        "Ak10-Jet Reco. Efficiency (%)",
-        "#it{m_{N}} = 1.0 TeV",
-        "#DeltaR(J_{truth}, J_{reco.}) #leq 0.75",
-        "Considering H #rightarrow b#bar{b} only.",
-        "Clopper-Pearson @ 95% CL",
-    ])
-
-    leg = ROOT.TLegend(LEGEND_X1, LEGEND_Y1, LEGEND_X2, LEGEND_Y2)
-    leg.SetFillColor(0)
-    leg.SetBorderSize(0)
-    leg.SetTextSize(LEGEND_TEXT_SIZE)
-    leg.SetNColumns(2)
-    for i, pid in enumerate(boson_defs):
-        leg.AddEntry(eff_hists_eta[i], f'{boson_defs[pid]["name"]} (#it{{m}} = {boson_defs[pid]["mass"]} GeV)', "p")
-        leg.AddEntry(eff_hists_eta_mw[i], f'{boson_defs[pid]["name"]} + #it{{m_{{SD}}}} window', "p")
-    leg.Draw()
-
-    suppress_x_errors(eff_hists_eta + eff_hists_eta_mw)
-
-    c_eta.Update()
-    c_eta.SaveAs("./plots/fatjet_reconstruction_efficiency_vs_eta.png")
-    save_pdf(c_eta, "./plots/fatjet_reconstruction_efficiency_vs_eta.pdf")
-    c_eta.Close()
+        plot_efficiency(all_hists, [pid], "pt",
+                        output="./plots/fatjet_reconstruction_efficiency_vs_pt_" + name,
+                        canvas_name="c_eff_pt_" + name, n_columns=1)
+        plot_efficiency(all_hists, [pid], "eta",
+                        output="./plots/fatjet_reconstruction_efficiency_vs_eta_" + name,
+                        canvas_name="c_eff_eta_" + name, n_columns=1)
 
     # set titles on response hists and save all to file
     for pid, props in boson_defs.items():

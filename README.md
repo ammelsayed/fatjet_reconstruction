@@ -22,6 +22,7 @@ All the efficiency plots (fatjet v7 and dijet) share the same layout:
 - Each boson has its own marker shape (W circle, Z square, H triangle) on top of its colour, and the efficiency with the mass window uses the open version of that marker with a dashed line, so the figure stays readable in black and white.
 - The points are connected by a line in the pT plot, where the efficiency varies smoothly, but not in the eta plot, where it oscillates from bin to bin.
 - The exported PDF is cropped to the drawing. ROOT always writes the PDF on a fixed A4 page and leaves the drawing in a corner of it, so the page is cropped with ghostscript afterwards.
+- Every figure comes in two flavours: one with all the bosons on the same axes, and one figure per boson. The per-boson figures are named `<prefix>_efficiency_vs_pt_<NAME>.png` and `<prefix>_efficiency_vs_eta_<NAME>.png` (with `NAME` being `W`, `Z` or `H`), and their legend holds the two selection requirements of that boson only.
 
 ## Does the dijet efficiency need an invariant mass requirement?
 
