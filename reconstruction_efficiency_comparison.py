@@ -14,11 +14,11 @@ def draw_label_block(lines):
     """Draw the annotation block inside the frame, below its top edge."""
     label = ROOT.TLatex()
     label.SetNDC()
-    label.SetTextSize(0.022)
-    y = 0.903
+    label.SetTextSize(0.028)
+    y = 0.88
     for text in lines:
-        label.DrawLatex(0.175, y, text)
-        y -= 0.036
+        label.DrawLatex(0.2, y, text)
+        y -= 0.04
 
 def load_histograms(path):
     """Read the efficiency input histograms of one reconstruction method.
@@ -32,6 +32,7 @@ def load_histograms(path):
     for name in BOSONS:
         for stage in ["total_pt", "matched_pt", "matched_pt_mw"]:
             h = f_in.Get("h_" + stage + "_" + name)
+            h.GetXaxis().SetTitle(f"Truth p_{{T}}^{{#it{name}}} [GeV]")
             h.SetDirectory(0)
             histograms[name][stage] = h
     f_in.Close()
@@ -43,22 +44,18 @@ def make_efficiency(h_mat, h_tot, color, with_mass_window):
     eff.SetStatisticOption(ROOT.TEfficiency.kFCP)
     eff.SetConfidenceLevel(0.95)
     eff.SetMarkerStyle(21 if with_mass_window else 20)
-    eff.SetMarkerSize(1.0)
+    eff.SetMarkerSize(0.8)
     eff.SetLineWidth(2)
-    eff.SetLineStyle(2 if with_mass_window else 1)
+    # eff.SetLineStyle(2 if with_mass_window else 1)
     eff.SetFillColor(0)
-    eff.SetMarkerColor(color)
-    eff.SetLineColor(color)
+    eff.SetMarkerColorAlpha(color, 0.5 if with_mass_window else 1.0)
+    eff.SetLineColorAlpha(color, 0.5 if with_mass_window else 1.0)
     return eff
 
 def plot_efficiency(name, fatjet_hists, dijet_hists):
     """Draw the FatJet and dijet reconstruction efficiency of one boson (each
     with and without the mass window) on one canvas and save the figure."""
-    canvas = ROOT.TCanvas("c_eff_pt_" + name, "FatJet vs Dijet Efficiency vs pT", 1050, 680)
-    canvas.SetLeftMargin(0.135)
-    canvas.SetRightMargin(0.035)
-    canvas.SetTopMargin(0.045)
-    canvas.SetBottomMargin(0.125)
+    canvas = ROOT.TCanvas("c_eff_pt_" + name, "FatJet vs Dijet Efficiency vs pT", 800, 600)
 
     curricula = []
     for hists, color in [[fatjet_hists, ROOT.kBlack], [dijet_hists, 2]]:
@@ -70,7 +67,7 @@ def plot_efficiency(name, fatjet_hists, dijet_hists):
     ROOT.gPad.Update()
     graph = curricula[0].GetPaintedGraph()
     graph.SetMinimum(0.0)
-    graph.SetMaximum(1.45)
+    graph.SetMaximum(1.65)
     graph.GetXaxis().SetRangeUser(150, 1150)
     graph.GetXaxis().SetNdivisions(505, True)
     graph.GetYaxis().SetNdivisions(1010, True)
@@ -79,19 +76,19 @@ def plot_efficiency(name, fatjet_hists, dijet_hists):
         ROOT.gPad.Update()
 
     draw_label_block([
-        "#scale[1.1]{#bf{#sqrt{s} = %s TeV, %s fb^{-1}}}" % (13.6, 400),
+        "#scale[1.1]{#bf{#sqrt{s} = %s TeV, %s fb^{-1}}}" % (13.6, 500),
         "FatJet vs Dijet Reco. Efficiency (%)",
-        "#it{m_{N}} = 1.0 TeV",
+        # "#it{m_{N}} = 1.0 TeV",
         "FatJet: #DeltaR(J_{truth}, J_{reco.}) #leq 0.75",
         "Dijet: #DeltaR(q, j) #leq 0.4",
-        "Considering H #rightarrow b#bar{b} only. Clopper-Pearson @ 95% CL",
+        # "Considering H #rightarrow b#bar{b} only.",
+        "Clopper-Pearson @ 95% CL"
     ])
 
-    leg = ROOT.TLegend(0.505, 0.775, 0.945, 0.915)
+    leg = ROOT.TLegend(0.6, 0.7, 0.88, 0.92)
     leg.SetFillColor(0)
     leg.SetBorderSize(0)
-    leg.SetTextSize(0.024)
-    leg.SetNColumns(2)
+    leg.SetTextSize(0.03)
     leg.AddEntry(curricula[0], "FatJet (angular match)", "lp")
     leg.AddEntry(curricula[1], "FatJet + #it{m_{SD}} window", "lp")
     leg.AddEntry(curricula[2], "Dijet (angular match)", "lp")
