@@ -22,7 +22,6 @@ debug = 0
 overwrite_results = False
 max_entries = None
 results_file = "dijet_reconstruction_efficiency_results.root"
-histograms_file = "dijet_histograms_results.root"
 
 DeltaRCut = 0.75
 apply_fiducial_cuts_at_filling = True
@@ -50,15 +49,6 @@ boson_defs = {
     25: {"name": "H", "mass": 125.0, "daughter_pids": {5}, "color": 3, "mass_window": (110.0, 140.0)}
 }
 
-def draw_label_block(lines):
-    """Draw the annotation block inside the frame, below its top edge."""
-    label = ROOT.TLatex()
-    label.SetNDC()
-    label.SetTextSize(0.022)
-    y = 0.903
-    for text in lines:
-        label.DrawLatex(0.175, y, text)
-        y -= 0.036
 
 BRANCHES = []
 for pid, props in boson_defs.items():
@@ -71,6 +61,16 @@ for pid, props in boson_defs.items():
         f"{name}_truth_dR"
     ])
 
+def draw_label_block(lines):
+    """Draw the annotation block inside the frame, below its top edge."""
+    label = ROOT.TLatex()
+    label.SetNDC()
+    label.SetTextSize(0.022)
+    y = 0.903
+    for text in lines:
+        label.DrawLatex(0.175, y, text)
+        y -= 0.036
+        
 def find_bosons(Particle_branch, boson_pid, daughter_pids):
     bosons = []
     seen = set()
@@ -451,73 +451,53 @@ def plot_efficiency(all_hists, pids, kind, output=None, canvas_name=None, n_colu
     canvas.SaveAs(output + ".pdf")
     canvas.Close()
 
+def build_hists(tree, kind, pids):
+    """Bin the raw results tree for the given bosons. The binning is decided
+    here, in the drawing stage, and is never written to disk: change it freely,
+    the event loop never has to be re-run."""
+    if kind == "pt":
+        pt_bin_width = 20
+        bins = list(range(200, 1000 + pt_bin_width, pt_bin_width))
+    else:
+        n_bins = 50
+        eta_lo, eta_hi = -2.5, 2.5
+        bins = [eta_lo + i * (eta_hi - eta_lo) / n_bins for i in range(n_bins + 1)]
+    bins_arr = array.array('d', bins)
+
+    all_hists = {}
+    for pid in pids:
+        name = boson_defs[pid]["name"]
+        n_bins = len(bins) - 1
+        all_hists[pid] = {
+            "total_" + kind: ROOT.TH1D(f"h_total_{kind}_{name}", "", n_bins, bins_arr),
+            "matched_" + kind: ROOT.TH1D(f"h_matched_{kind}_{name}", "", n_bins, bins_arr),
+            "matched_" + kind + "_mw": ROOT.TH1D(f"h_matched_{kind}_mw_{name}", "", n_bins, bins_arr),
+        }
+        tree.Project(f"h_total_{kind}_{name}", f"{name}_truth_{kind}", f"{name}_truth_pt > 0")
+        tree.Project(f"h_matched_{kind}_{name}", f"{name}_truth_{kind}", f"{name}_matched")
+        tree.Project(f"h_matched_{kind}_mw_{name}", f"{name}_truth_{kind}", f"{name}_m_matched")
+    return all_hists, bins
+
+
 def calc_and_plot(tree, verbose=False):
 
     ROOT.gStyle.SetEndErrorSize(2)
 
     os.makedirs("./plots", exist_ok=True)
-    pt_bin_width = 20
-    pt_bins = list(range(200, 1000 + pt_bin_width, pt_bin_width))
-    n_pt_bins = len(pt_bins) - 1
-    pt_bins_arr = array.array('d', pt_bins)
 
-    n_eta_bins = 50
-    eta_lo, eta_hi = -2.5, 2.5
-    eta_bins = [eta_lo + i * (eta_hi - eta_lo) / n_eta_bins for i in range(n_eta_bins + 1)]
-    eta_bins_arr = array.array('d', eta_bins)
+    for kind in ["pt", "eta"]:
+        all_hists, bins = build_hists(tree, kind, list(boson_defs))
 
-    all_hists = {}
-    for pid, props in boson_defs.items():
-        name = props["name"]
-        all_hists[pid] = {
-            "total_pt": ROOT.TH1D(f"h_total_pt_{name}", "", n_pt_bins, pt_bins_arr),
-            "matched_pt": ROOT.TH1D(f"h_matched_pt_{name}", "", n_pt_bins, pt_bins_arr),
-            "matched_pt_mw": ROOT.TH1D(f"h_matched_pt_mw_{name}", "", n_pt_bins, pt_bins_arr),
-            "total_eta": ROOT.TH1D(f"h_total_eta_{name}", "", n_eta_bins, eta_bins_arr),
-            "matched_eta": ROOT.TH1D(f"h_matched_eta_{name}", "", n_eta_bins, eta_bins_arr),
-            "matched_eta_mw": ROOT.TH1D(f"h_matched_eta_mw_{name}", "", n_eta_bins, eta_bins_arr),
-            "pt_response": ROOT.TH2D(f"h_pt_resp_{name}", "", n_pt_bins, pt_bins_arr, 100, 0, 2),
-            "mass_response": ROOT.TH2D(f"h_mass_resp_{name}", "", 100, 0, 200, 100, 0, 200),
-        }
-        tree.Project(f"h_total_pt_{name}", f"{name}_truth_pt", f"{name}_truth_pt > 0")
-        tree.Project(f"h_matched_pt_{name}", f"{name}_truth_pt", f"{name}_matched")
-        tree.Project(f"h_matched_pt_mw_{name}", f"{name}_truth_pt", f"{name}_m_matched")
-        tree.Project(f"h_total_eta_{name}", f"{name}_truth_eta", f"{name}_truth_pt > 0")
-        tree.Project(f"h_matched_eta_{name}", f"{name}_truth_eta", f"{name}_matched")
-        tree.Project(f"h_matched_eta_mw_{name}", f"{name}_truth_eta", f"{name}_m_matched")
-        tree.Project(f"h_pt_resp_{name}", f"{name}_reco_pt/{name}_truth_pt:{name}_truth_pt", f"{name}_matched")
-        tree.Project(f"h_mass_resp_{name}", f"{name}_reco_m:{name}_truth_m", f"{name}_matched")
+        if verbose:
+            print_efficiency_table(all_hists, kind, bins)
 
-    if verbose:
-        print_efficiency_table(all_hists, "pt", pt_bins)
-        print_efficiency_table(all_hists, "eta", eta_bins)
-
-    # all the bosons on one figure, and then one figure per boson
-    plot_efficiency(all_hists, list(boson_defs), "pt")
-    plot_efficiency(all_hists, list(boson_defs), "eta")
-    for pid, props in boson_defs.items():
-        name = props["name"]
-        plot_efficiency(all_hists, [pid], "pt",
-                        output="./plots/dijet_reconstruction_efficiency_vs_pt_" + name,
-                        canvas_name="c_eff_pt_" + name, n_columns=1)
-        plot_efficiency(all_hists, [pid], "eta",
-                        output="./plots/dijet_reconstruction_efficiency_vs_eta_" + name,
-                        canvas_name="c_eff_eta_" + name, n_columns=1)
-
-    # set titles on response hists and save all to file
-    for pid, props in boson_defs.items():
-        name = props["name"]
-        all_hists[pid]["pt_response"].GetXaxis().SetTitle("Truth p_{T} [GeV]")
-        all_hists[pid]["pt_response"].GetYaxis().SetTitle("Reco p_{T} / Truth p_{T}")
-        all_hists[pid]["mass_response"].GetXaxis().SetTitle("Truth mass [GeV]")
-        all_hists[pid]["mass_response"].GetYaxis().SetTitle("Reco mass (SoftDrop) [GeV]")
-
-    f_out = ROOT.TFile(histograms_file, "RECREATE")
-    for pid in all_hists:
-        for h in all_hists[pid].values():
-            h.Write()
-    f_out.Close()
-    print(f"Saved histograms -> {histograms_file}")
+        # all the bosons on one figure, and then one figure per boson
+        plot_efficiency(all_hists, list(boson_defs), kind)
+        for pid, props in boson_defs.items():
+            name = props["name"]
+            plot_efficiency(all_hists, [pid], kind,
+                            output=f"./plots/dijet_reconstruction_efficiency_vs_{kind}_" + name,
+                            canvas_name=f"c_eff_{kind}_" + name, n_columns=1)
 
 def main():
     import argparse
