@@ -50,47 +50,15 @@ boson_defs = {
     25: {"name": "H", "mass": 125.0, "daughter_pids": {5}, "color": 3, "mass_window": (110.0, 140.0)}
 }
 
-# Plot layout. The annotation block lives in the left margin and the legend in the
-# right margin, so that neither of them can overlap the data points. The canvas is
-# made wider to fit both of them.
-CANVAS_W = 1050
-CANVAS_H = 680
-MARGIN_LEFT = 0.135
-MARGIN_RIGHT = 0.035
-MARGIN_TOP = 0.045
-MARGIN_BOTTOM = 0.125
-TEXT_SIZE = 0.022
-LEGEND_TEXT_SIZE = 0.024
-
-# The annotation block and the legend are drawn inside the frame, in the empty band
-# between the top of the frame and the largest efficiency. The y axis of every plot
-# is therefore given a maximum of Y_MAX, so that this band is free of data points.
-Y_MAX = 1.45
-TEXT_X = MARGIN_LEFT + 0.040
-TEXT_Y_TOP = 1.0 - MARGIN_TOP - 0.052
-TEXT_DY = 0.036
-LEGEND_X1 = 1.0 - MARGIN_RIGHT - 0.46
-LEGEND_X2 = 1.0 - MARGIN_RIGHT - 0.02
-LEGEND_Y1 = 1.0 - MARGIN_TOP - 0.180
-LEGEND_Y2 = 1.0 - MARGIN_TOP - 0.040
-
-# The two selection requirements of the same boson share the boson colour and are
-# told apart by the line and marker style only, so that they read as a pair and stay
-# distinguishable when the figure is printed in black and white.
-LINE_STYLE_PLAIN = 1
-LINE_STYLE_MASSWINDOW = 2
-MARKER_STYLE_PLAIN = {24: 20, 23: 22, 25: 24}
-MARKER_STYLE_MASSWINDOW = {24: 21, 23: 23, 25: 25}
-
 def draw_label_block(lines):
     """Draw the annotation block inside the frame, below its top edge."""
     label = ROOT.TLatex()
     label.SetNDC()
-    label.SetTextSize(TEXT_SIZE)
-    y = TEXT_Y_TOP
+    label.SetTextSize(0.022)
+    y = 0.903
     for text in lines:
-        label.DrawLatex(TEXT_X, y, text)
-        y -= TEXT_DY
+        label.DrawLatex(0.175, y, text)
+        y -= 0.036
 
 BRANCHES = []
 for pid, props in boson_defs.items():
@@ -373,10 +341,10 @@ def make_efficiency(h_mat, h_tot, pid, with_mass_window):
     eff = ROOT.TEfficiency(h_mat, h_tot)
     eff.SetStatisticOption(ROOT.TEfficiency.kFCP)
     eff.SetConfidenceLevel(0.95)
-    eff.SetMarkerStyle(MARKER_STYLE_MASSWINDOW[pid] if with_mass_window else MARKER_STYLE_PLAIN[pid])
+    eff.SetMarkerStyle({24: 21, 23: 23, 25: 25}[pid] if with_mass_window else {24: 20, 23: 22, 25: 24}[pid])
     eff.SetMarkerSize(1.0)
     eff.SetLineWidth(2)
-    eff.SetLineStyle(LINE_STYLE_MASSWINDOW if with_mass_window else LINE_STYLE_PLAIN)
+    eff.SetLineStyle(2 if with_mass_window else 1)
     eff.SetFillColor(0)
     eff.SetMarkerColor(props["color"])
     eff.SetLineColor(props["color"])
@@ -420,11 +388,11 @@ def plot_efficiency(all_hists, pids, kind, output=None, canvas_name=None, n_colu
     if canvas_name is None:
         canvas_name = "c_eff_" + kind
 
-    canvas = ROOT.TCanvas(canvas_name, settings["canvas_title"], CANVAS_W, CANVAS_H)
-    canvas.SetLeftMargin(MARGIN_LEFT)
-    canvas.SetRightMargin(MARGIN_RIGHT)
-    canvas.SetTopMargin(MARGIN_TOP)
-    canvas.SetBottomMargin(MARGIN_BOTTOM)
+    canvas = ROOT.TCanvas(canvas_name, settings["canvas_title"], 1050, 680)
+    canvas.SetLeftMargin(0.135)
+    canvas.SetRightMargin(0.035)
+    canvas.SetTopMargin(0.045)
+    canvas.SetBottomMargin(0.125)
     eff_hists = []
     eff_hists_mw = []
     first = True
@@ -443,7 +411,7 @@ def plot_efficiency(all_hists, pids, kind, output=None, canvas_name=None, n_colu
             eff_hist.Draw(settings["draw_option"])
             ROOT.gPad.Update()
             eff_hist.GetPaintedGraph().SetMinimum(0.0)
-            eff_hist.GetPaintedGraph().SetMaximum(Y_MAX)
+            eff_hist.GetPaintedGraph().SetMaximum(1.45)
             eff_hist.GetPaintedGraph().GetXaxis().SetRangeUser(*settings["x_range"])
             eff_hist.GetPaintedGraph().GetXaxis().SetNdivisions(settings["x_divisions"], True)
             eff_hist.GetPaintedGraph().GetYaxis().SetNdivisions(1010, True)
@@ -467,10 +435,10 @@ def plot_efficiency(all_hists, pids, kind, output=None, canvas_name=None, n_colu
     ])
 
     legend_width = 0.46 if len(pids) > 1 else 0.26
-    leg = ROOT.TLegend(1.0 - MARGIN_RIGHT - legend_width, LEGEND_Y1, 1.0 - MARGIN_RIGHT - 0.02, LEGEND_Y2)
+    leg = ROOT.TLegend(1.0 - 0.035 - legend_width, 0.775, 0.945, 0.915)
     leg.SetFillColor(0)
     leg.SetBorderSize(0)
-    leg.SetTextSize(LEGEND_TEXT_SIZE)
+    leg.SetTextSize(0.024)
     leg.SetNColumns(n_columns)
     for i, pid in enumerate(pids):
         name = boson_defs[pid]["name"]
