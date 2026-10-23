@@ -133,14 +133,6 @@ def get_fatjets(FatJet_branch):
         ak10jets.append((fj.P4(),fj.SoftDroppedP4[0].M()))
     return ak10jets
 
-def setup_canvas(name, title):
-    canvas = ROOT.TCanvas(name, title, CANVAS_W, CANVAS_H)
-    canvas.SetLeftMargin(MARGIN_LEFT)
-    canvas.SetRightMargin(MARGIN_RIGHT)
-    canvas.SetTopMargin(MARGIN_TOP)
-    canvas.SetBottomMargin(MARGIN_BOTTOM)
-    return canvas
-
 def suppress_x_errors(eff_hists):
     """Drop the horizontal (bin width) error bars, keeping the vertical ones.
 
@@ -398,7 +390,11 @@ def plot_efficiency(all_hists, pids, kind, output=None, canvas_name=None, n_colu
     if canvas_name is None:
         canvas_name = "c_eff_" + kind
 
-    canvas = setup_canvas(canvas_name, settings["canvas_title"])
+    canvas = ROOT.TCanvas(canvas_name, settings["canvas_title"], CANVAS_W, CANVAS_H)
+    canvas.SetLeftMargin(MARGIN_LEFT)
+    canvas.SetRightMargin(MARGIN_RIGHT)
+    canvas.SetTopMargin(MARGIN_TOP)
+    canvas.SetBottomMargin(MARGIN_BOTTOM)
     eff_hists = []
     eff_hists_mw = []
     first = True

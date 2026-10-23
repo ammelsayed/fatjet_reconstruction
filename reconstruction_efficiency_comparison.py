@@ -10,14 +10,6 @@ dijet_histograms_file = "dijet_histograms_results.root"
 
 BOSONS = ["W", "Z", "H"]
 
-def setup_canvas(name, title):
-    canvas = ROOT.TCanvas(name, title, 1050, 680)
-    canvas.SetLeftMargin(0.135)
-    canvas.SetRightMargin(0.035)
-    canvas.SetTopMargin(0.045)
-    canvas.SetBottomMargin(0.125)
-    return canvas
-
 def suppress_x_errors(eff_hists):
     """Drop the horizontal (bin width) error bars, keeping the vertical ones.
 
@@ -82,7 +74,11 @@ def make_efficiency(h_mat, h_tot, color, with_mass_window):
 def plot_efficiency(name, fatjet_hists, dijet_hists):
     """Draw the FatJet and dijet reconstruction efficiency of one boson (each
     with and without the mass window) on one canvas and save the figure."""
-    canvas = setup_canvas("c_eff_pt_" + name, "FatJet vs Dijet Efficiency vs pT")
+    canvas = ROOT.TCanvas("c_eff_pt_" + name, "FatJet vs Dijet Efficiency vs pT", 1050, 680)
+    canvas.SetLeftMargin(0.135)
+    canvas.SetRightMargin(0.035)
+    canvas.SetTopMargin(0.045)
+    canvas.SetBottomMargin(0.125)
 
     curricula = []
     for hists, color in [[fatjet_hists, ROOT.kBlack], [dijet_hists, 2]]:
