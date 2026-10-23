@@ -19,7 +19,7 @@ print("Using ROOT version:", ROOT.__version__)
 print("Using Delphes libraries found at:", DELPHES_PATH)
 
 debug = 0
-overwrite_results = True
+overwrite_results = False
 max_entries = None
 results_file = "fatjet_reconstruction_efficiency_results.root"
 
@@ -375,7 +375,7 @@ def plot_efficiency(all_hists, pids, kind, output=None, canvas_name=None, n_colu
         ROOT.gPad.Update()
 
     draw_label_block([
-        "#scale[1.1]{#bf{#sqrt{s} = %s TeV, %s fb^{-1}}}" % (13.6, 400),
+        "#scale[1.1]{#bf{#sqrt{s} = %s TeV, %s fb^{-1}}}" % (13.6, 500),
         "Ak10-Jet Reco. Efficiency (%)",
         "#it{m_{N}} = 1.0 TeV",
         "#DeltaR(J_{truth}, J_{reco.}) #leq 0.75",
@@ -406,7 +406,7 @@ def build_hists(tree, kind, pids):
     the event loop never has to be re-run."""
     if kind == "pt":
         pt_bin_width = 20
-        bins = list(range(200, 1000 + pt_bin_width, pt_bin_width))
+        bins = list(range(0, 1200 + pt_bin_width, pt_bin_width))
     else:
         n_bins = 50
         eta_lo, eta_hi = -2.5, 2.5

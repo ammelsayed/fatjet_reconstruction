@@ -8,6 +8,7 @@ print("Using ROOT version:", ROOT.__version__)
 
 fatjet_results_file = "fatjet_reconstruction_efficiency_results.root"
 dijet_results_file = "dijet_reconstruction_efficiency_results.root"
+correlations_results_file = "/data/ammelsayed/mother_decay_correlations/truth_decay_correlations_results_v3.root"
 
 BOSONS = ["W", "Z", "H"]
 
@@ -32,7 +33,7 @@ def build_hists(tree, name, tag):
     """Bin the raw results of one boson for one reconstruction method. The
     binning is decided here, in the drawing stage, and is never written to
     disk: change it freely, the efficiency scripts never have to be re-run."""
-    pt_bin_width = 20
+    pt_bin_width = 10
     bins = list(range(200, 1000 + pt_bin_width, pt_bin_width))
     n_bins = len(bins) - 1
     bins_arr = array.array('d', bins)
@@ -46,6 +47,14 @@ def build_hists(tree, name, tag):
     tree.Project(f"h_matched_pt_{tag}_{name}", f"{name}_truth_pt", f"{name}_matched")
     tree.Project(f"h_matched_pt_mw_{tag}_{name}", f"{name}_truth_pt", f"{name}_m_matched")
     return hists
+
+def build_corr_hist(tree):
+    """Bin the truth W -> qq deltaR vs truth W pT from the decay correlations
+    results, with the same binning and smoothing as truth_decay_correlations_v3."""
+    h2 = ROOT.TH2D("h2_W_dR", "", 200, 0.0, 1200.0, 200, 0.0, 3.5)
+    tree.Project("h2_W_dR", "W_dR:W_pt", "weight")
+    h2.Smooth(option="k5b")
+    return h2
 
 def make_efficiency(h_mat, h_tot, color, with_mass_window):
     """Efficiency curve of one reconstruction, with or without mass window."""
@@ -111,18 +120,94 @@ def plot_efficiency(name, fatjet_hists, dijet_hists):
     canvas.Close()
     return output
 
+def plot_efficiency_with_correlations(name, fatjet_hists, dijet_hists, corr_tree):
+    """Draw the W -> qq deltaR 2D histogram above the FatJet vs dijet efficiency
+    plot of one boson, with both panels sharing the same x axis."""
+    canvas = ROOT.TCanvas("c_eff_corr_" + name, "FatJet vs Dijet Efficiency vs pT with W Decay Correlations", 800, 800)
+    ROOT.gStyle.SetPalette(ROOT.kRainbow)
+    pad_top = ROOT.TPad("pad_top_" + name, "", 0.0, 0.4, 1.0, 1.0)
+    pad_top.SetBottomMargin(0.01)
+    pad_top.SetRightMargin(0.18)
+    pad_top.Draw()
+    pad_bot = ROOT.TPad("pad_bot_" + name, "", 0.0, 0.0, 1.0, 0.4)
+    pad_bot.SetLogz(True)
+    pad_bot.SetTopMargin(0.02)
+    pad_bot.SetRightMargin(0.18)
+    pad_bot.Draw()
+
+    pad_top.cd()
+    curricula = []
+    for hists, color in [[fatjet_hists, ROOT.kBlack], [dijet_hists, 2]]:
+        curricula.append(make_efficiency(hists["matched_pt"], hists["total_pt"], color, False))
+        curricula.append(make_efficiency(hists["matched_pt_mw"], hists["total_pt"], color, True))
+
+    # a TEfficiency axis cannot span beyond its own data, so the frame is drawn
+    # explicitly to get the same 0-1200 GeV range as the 2D histogram above.
+    frame = pad_bot.DrawFrame(0.0, 0.0, 1200.0, 1.65)
+    frame.SetTitle("Reconstruction efficiency; Truth p_{T} [GeV]; #epsilon_{reco.} (%)")
+    frame.GetXaxis().SetNdivisions(506, True)
+    frame.GetYaxis().SetNdivisions(1010, True)
+    for eff in curricula:
+        eff.Draw("same PL")
+        ROOT.gPad.Update()
+
+    draw_label_block([
+        "#scale[1.1]{#bf{#sqrt{s} = %s TeV, %s fb^{-1}}}" % (13.6, 500),
+        "FatJet vs Dijet Reco. Efficiency (%)",
+        "FatJet: #DeltaR(J_{truth}, J_{reco.}) #leq 0.75",
+        "Dijet: #DeltaR(q, j) #leq 0.4",
+        "Clopper-Pearson @ 95% CL"
+    ])
+
+    leg = ROOT.TLegend(0.5, 0.7, 0.75, 0.92)
+    leg.SetFillColor(0)
+    leg.SetBorderSize(0)
+    leg.SetTextSize(0.03)
+    leg.AddEntry(curricula[0], "FatJet (angular match)", "lp")
+    leg.AddEntry(curricula[1], "FatJet + #it{m_{SD}} window", "lp")
+    leg.AddEntry(curricula[2], "Dijet (angular match)", "lp")
+    leg.AddEntry(curricula[3], "Dijet + #it{m_{jj}} window", "lp")
+    leg.Draw()
+
+    pad_bot.cd()
+    h2 = build_corr_hist(corr_tree)
+    h2.GetXaxis().SetRangeUser(0.0, 1200.0)
+    h2.GetXaxis().SetNdivisions(506)
+    h2.GetYaxis().SetTitle("#it{#DeltaR}(#it{q_{1}, q_{2}})")
+    h2.GetYaxis().SetNdivisions(1010)
+    h2.GetZaxis().SetTitle("Weighted Events")
+    h2.GetZaxis().SetNdivisions(1010)
+    h2.Draw("COLZS")
+    draw_label_block([
+    "#it{pp #rightarrow N^{#pm}N^{0}, N^{0} #rightarrow W^{#pm}l^{#mp}, W^{#pm} #rightarrow q_{1}q_{2}}",
+    "#it{m_{N}} = 1.0 TeV",
+    ])
+
+
+    output = "./plots/reconstruction_efficiency_comparison_vs_pt_" + name + "_with_w_correlations"
+    canvas.Update()
+    canvas.SaveAs(output + ".png")
+    canvas.SaveAs(output + ".pdf")
+    canvas.Close()
+    return output
+
+
 def main():
     ROOT.gStyle.SetEndErrorSize(2)
 
     os.makedirs("./plots", exist_ok=True)
     fatjet_tree = load_tree(fatjet_results_file)
     dijet_tree = load_tree(dijet_results_file)
+    correlations_tree = load_tree(correlations_results_file)
 
     for name in BOSONS:
-        output = plot_efficiency(name,
-                                 build_hists(fatjet_tree, name, "fatjet"),
-                                 build_hists(dijet_tree, name, "dijet"))
+        fatjet_hists = build_hists(fatjet_tree, name, "fatjet")
+        dijet_hists = build_hists(dijet_tree, name, "dijet")
+        output = plot_efficiency(name, fatjet_hists, dijet_hists)
         print(f"Saved {output}.png/.pdf")
+        if name == "W":
+            output = plot_efficiency_with_correlations(name, fatjet_hists, dijet_hists, correlations_tree)
+            print(f"Saved {output}.png/.pdf")
 
 if __name__ == "__main__":
     main()
