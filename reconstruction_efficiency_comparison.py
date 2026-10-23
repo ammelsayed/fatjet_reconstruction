@@ -1,5 +1,4 @@
 import os
-import subprocess
 import ROOT
 
 ROOT.gROOT.SetBatch(True)
@@ -10,23 +9,6 @@ fatjet_histograms_file = "fatjet_histograms_results.root"
 dijet_histograms_file = "dijet_histograms_results.root"
 
 BOSONS = ["W", "Z", "H"]
-
-def save_pdf(canvas, path):
-    """Save the canvas as PDF and crop the page to the drawing.
-
-    ROOT always writes the PDF on a fixed A4 page and leaves the drawing in a
-    corner of it, which makes the exported figure look broken. The page is
-    cropped to the content afterwards.
-    """
-    canvas.SaveAs(path)
-    try:
-        subprocess.run(
-            ["gs", "-q", "-dNOPAUSE", "-dBATCH", "-sDEVICE=pdfwrite",
-             "-dEPSCrop", "-dUseCropBox", "-o", path + ".tmp", path],
-            check=True, timeout=300)
-        os.replace(path + ".tmp", path)
-    except Exception as exc:
-        print(f"WARNING: could not crop the PDF {path}: {exc}")
 
 def setup_canvas(name, title):
     canvas = ROOT.TCanvas(name, title, 1050, 680)
@@ -145,7 +127,7 @@ def plot_efficiency(name, fatjet_hists, dijet_hists):
     output = "./plots/reconstruction_efficiency_comparison_vs_pt_" + name
     canvas.Update()
     canvas.SaveAs(output + ".png")
-    save_pdf(canvas, output + ".pdf")
+    canvas.SaveAs(output + ".pdf")
     canvas.Close()
     return output
 
