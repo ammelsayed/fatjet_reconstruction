@@ -1,12 +1,13 @@
 import os
+import array
 import ROOT
 
 ROOT.gROOT.SetBatch(True)
 ROOT.gROOT.SetStyle("ATLAS")
 print("Using ROOT version:", ROOT.__version__)
 
-fatjet_histograms_file = "fatjet_histograms_results.root"
-dijet_histograms_file = "dijet_histograms_results.root"
+fatjet_results_file = "fatjet_reconstruction_efficiency_results.root"
+dijet_results_file = "dijet_reconstruction_efficiency_results.root"
 
 BOSONS = ["W", "Z", "H"]
 
@@ -20,23 +21,31 @@ def draw_label_block(lines):
         label.DrawLatex(0.2, y, text)
         y -= 0.04
 
-def load_histograms(path):
-    """Read the efficiency input histograms of one reconstruction method.
-
-    Both the fatjet and the dijet script save h_total_pt_{name}, h_matched_pt_
-    {name} and h_matched_pt_mw_{name} with the same binning, so the curves can
-    be built straight from the saved files without re-running either script.
-    """
+def load_tree(path):
+    """Read the raw results tree written by one of the reconstruction scripts."""
     f_in = ROOT.TFile.Open(path)
-    histograms = {name: {} for name in BOSONS}
-    for name in BOSONS:
-        for stage in ["total_pt", "matched_pt", "matched_pt_mw"]:
-            h = f_in.Get("h_" + stage + "_" + name)
-            h.GetXaxis().SetTitle(f"Truth p_{{T}}^{{#it{name}}} [GeV]")
-            h.SetDirectory(0)
-            histograms[name][stage] = h
-    f_in.Close()
-    return histograms
+    tree = f_in.Get("results")
+    tree._file = f_in
+    return tree
+
+def build_hists(tree, name, tag):
+    """Bin the raw results of one boson for one reconstruction method. The
+    binning is decided here, in the drawing stage, and is never written to
+    disk: change it freely, the efficiency scripts never have to be re-run."""
+    pt_bin_width = 20
+    bins = list(range(200, 1000 + pt_bin_width, pt_bin_width))
+    n_bins = len(bins) - 1
+    bins_arr = array.array('d', bins)
+
+    hists = {
+        "total_pt": ROOT.TH1D(f"h_total_pt_{tag}_{name}", "", n_bins, bins_arr),
+        "matched_pt": ROOT.TH1D(f"h_matched_pt_{tag}_{name}", "", n_bins, bins_arr),
+        "matched_pt_mw": ROOT.TH1D(f"h_matched_pt_mw_{tag}_{name}", "", n_bins, bins_arr),
+    }
+    tree.Project(f"h_total_pt_{tag}_{name}", f"{name}_truth_pt", f"{name}_truth_pt > 0")
+    tree.Project(f"h_matched_pt_{tag}_{name}", f"{name}_truth_pt", f"{name}_matched")
+    tree.Project(f"h_matched_pt_mw_{tag}_{name}", f"{name}_truth_pt", f"{name}_m_matched")
+    return hists
 
 def make_efficiency(h_mat, h_tot, color, with_mass_window):
     """Efficiency curve of one reconstruction, with or without mass window."""
@@ -106,11 +115,13 @@ def main():
     ROOT.gStyle.SetEndErrorSize(2)
 
     os.makedirs("./plots", exist_ok=True)
-    fatjet_hists = load_histograms(fatjet_histograms_file)
-    dijet_hists = load_histograms(dijet_histograms_file)
+    fatjet_tree = load_tree(fatjet_results_file)
+    dijet_tree = load_tree(dijet_results_file)
 
     for name in BOSONS:
-        output = plot_efficiency(name, fatjet_hists[name], dijet_hists[name])
+        output = plot_efficiency(name,
+                                 build_hists(fatjet_tree, name, "fatjet"),
+                                 build_hists(dijet_tree, name, "dijet"))
         print(f"Saved {output}.png/.pdf")
 
 if __name__ == "__main__":
