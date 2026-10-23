@@ -10,26 +10,6 @@ dijet_histograms_file = "dijet_histograms_results.root"
 
 BOSONS = ["W", "Z", "H"]
 
-def suppress_x_errors(eff_hists):
-    """Drop the horizontal (bin width) error bars, keeping the vertical ones.
-
-    ROOT draws them by default, which turns a binned efficiency plot into a
-    staircase of overlapping bars. Every draw of a TEfficiency puts the bin width
-    back, and TLegend draws the object again for each legend entry, so this has
-    to be done once all the curves and the legend are on the canvas.
-    """
-    for eff_hist in eff_hists:
-        graph = eff_hist.GetPaintedGraph()
-        if not graph:
-            continue
-        ex_low = graph.GetEXlow()
-        ex_high = graph.GetEXhigh()
-        if not ex_low or not ex_high:
-            continue
-        for i in range(graph.GetN()):
-            ex_low[i] = 0.0
-            ex_high[i] = 0.0
-
 def draw_label_block(lines):
     """Draw the annotation block inside the frame, below its top edge."""
     label = ROOT.TLatex()
@@ -117,8 +97,6 @@ def plot_efficiency(name, fatjet_hists, dijet_hists):
     leg.AddEntry(curricula[2], "Dijet (angular match)", "lp")
     leg.AddEntry(curricula[3], "Dijet + #it{m_{jj}} window", "lp")
     leg.Draw()
-
-    suppress_x_errors(curricula)
 
     output = "./plots/reconstruction_efficiency_comparison_vs_pt_" + name
     canvas.Update()

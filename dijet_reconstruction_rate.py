@@ -82,26 +82,6 @@ LINE_STYLE_MASSWINDOW = 2
 MARKER_STYLE_PLAIN = {24: 20, 23: 22, 25: 24}
 MARKER_STYLE_MASSWINDOW = {24: 21, 23: 23, 25: 25}
 
-def suppress_x_errors(eff_hists):
-    """Drop the horizontal (bin width) error bars, keeping the vertical ones.
-
-    ROOT draws them by default, which turns a binned efficiency plot into a
-    staircase of overlapping bars. Every draw of a TEfficiency puts the bin width
-    back, and TLegend draws the object again for each legend entry, so this has
-    to be done once all the curves and the legend are on the canvas.
-    """
-    for eff_hist in eff_hists:
-        graph = eff_hist.GetPaintedGraph()
-        if not graph:
-            continue
-        ex_low = graph.GetEXlow()
-        ex_high = graph.GetEXhigh()
-        if not ex_low or not ex_high:
-            continue
-        for i in range(graph.GetN()):
-            ex_low[i] = 0.0
-            ex_high[i] = 0.0
-
 def draw_label_block(lines):
     """Draw the annotation block inside the frame, below its top edge."""
     label = ROOT.TLatex()
@@ -497,8 +477,6 @@ def plot_efficiency(all_hists, pids, kind, output=None, canvas_name=None, n_colu
         leg.AddEntry(eff_hists[i], f'{name} (#it{{m}} = {boson_defs[pid]["mass"]} GeV)', settings["legend_option"])
         leg.AddEntry(eff_hists_mw[i], f'{name} + #it{{m_{{jj}}}} window', settings["legend_option"])
     leg.Draw()
-
-    suppress_x_errors(eff_hists + eff_hists_mw)
 
     canvas.Update()
     canvas.SaveAs(output + ".png")
