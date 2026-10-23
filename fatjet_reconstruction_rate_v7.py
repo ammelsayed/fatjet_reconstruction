@@ -1,6 +1,5 @@
 import os
 import array
-import subprocess
 import ROOT
 import numpy as np
 from tqdm import tqdm
@@ -133,23 +132,6 @@ def get_fatjets(FatJet_branch):
                 continue
         ak10jets.append((fj.P4(),fj.SoftDroppedP4[0].M()))
     return ak10jets
-
-def save_pdf(canvas, path):
-    """Save the canvas as PDF and crop the page to the drawing.
-
-    ROOT always writes the PDF on a fixed A4 page and leaves the drawing in a
-    corner of it, which makes the exported figure look broken. The page is
-    cropped to the content afterwards.
-    """
-    canvas.SaveAs(path)
-    try:
-        subprocess.run(
-            ["gs", "-q", "-dNOPAUSE", "-dBATCH", "-sDEVICE=pdfwrite",
-             "-dEPSCrop", "-dUseCropBox", "-o", path + ".tmp", path],
-            check=True, timeout=300)
-        os.replace(path + ".tmp", path)
-    except Exception as exc:
-        print(f"WARNING: could not crop the PDF {path}: {exc}")
 
 def setup_canvas(name, title):
     canvas = ROOT.TCanvas(name, title, CANVAS_W, CANVAS_H)
@@ -474,7 +456,7 @@ def plot_efficiency(all_hists, pids, kind, output=None, canvas_name=None, n_colu
 
     canvas.Update()
     canvas.SaveAs(output + ".png")
-    save_pdf(canvas, output + ".pdf")
+    canvas.SaveAs(output + ".pdf")
     canvas.Close()
 
 def calc_and_plot(tree, verbose=False):
