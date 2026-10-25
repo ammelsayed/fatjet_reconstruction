@@ -10,20 +10,6 @@
 - **dijet** (`dijet_reconstruction_rate.py`): Same truth-level boson selection as the fatjet case (W/Z/H decaying hadronically), but the reco object is a **dijet** built from two AK4 jets instead of a single AK10 fatjet. The matching is done at parton level: the two truth decay quarks of the boson are matched to two distinct reconstructed jets by `DeltaR < 0.4`, which is the ATLAS/CMS standard for parton-to-jet matching (ATLAS arXiv:2308.00716, arXiv:1809.08597, ATLFAST 2.0; CMS CMS-PAS-JME-16-003 with `R_min = 0.4`, arXiv:1912.06046). The reco-side jet fiducial cuts are `pT > 25 GeV`, `|eta| < 2.5`, as used by ATLAS for a resolved V->qq dijet (arXiv:1706.01702). The efficiency is reported **twice**: once from the parton-level matching alone, and once with the additional requirement that the reconstructed dijet invariant mass falls in a window around the parent boson mass.
 - **Possible future updates**: Write the loop method in C/C++ and use Cython for more speed improvements.
 
-## Plot formatting
-
-All the efficiency plots (fatjet v7 and dijet) share the same layout:
-
-- The canvas is 1050 x 680. The annotation block sits in the **upper left corner inside the frame** and the legend in the **upper right corner inside the frame**, so that neither of them can ever overlap the data points.
-- The y axis of every plot goes up to `Y_MAX = 1.45`, well above the largest efficiency, so that the whole band in which the annotation block and the legend are drawn is free of data points and error bars. The Clopper-Pearson bounds reach up to 1 for a bin with very few entries, which is what sets the requirement.
-- The two selection requirements of the same boson share the boson colour and are told apart by the **line and marker style only**: solid line with a filled marker for the plain reconstruction efficiency, dashed line with an open marker for the efficiency with the mass window. They therefore read as a pair, and stay distinguishable when the figure is printed in black and white.
-- The legend uses two columns, one per requirement.
-- The y-axis range is set explicitly. ROOT auto-ranges from the first graph that is drawn, which would clip the mass-window curve below the bottom of the frame.
-- Each boson has its own marker shape (W circle, Z square, H triangle) on top of its colour, and the efficiency with the mass window uses the open version of that marker with a dashed line, so the figure stays readable in black and white.
-- The points are connected by a line in the pT plot, where the efficiency varies smoothly, but not in the eta plot, where it oscillates from bin to bin.
-- The exported PDF is cropped to the drawing. ROOT always writes the PDF on a fixed A4 page and leaves the drawing in a corner of it, so the page is cropped with ghostscript afterwards.
-- Every figure comes in two flavours: one with all the bosons on the same axes, and one figure per boson. The per-boson figures are named `<prefix>_efficiency_vs_pt_<NAME>.png` and `<prefix>_efficiency_vs_eta_<NAME>.png` (with `NAME` being `W`, `Z` or `H`), and their legend holds the two selection requirements of that boson only.
-
 ## Does the dijet efficiency need an invariant mass requirement?
 
 No — the reconstruction efficiency itself is defined **without** it, and the mass requirement is a second, separate stage. This is what ATLAS and CMS do, and both publish the efficiency with and without the mass cut:
