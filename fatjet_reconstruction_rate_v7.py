@@ -19,7 +19,7 @@ print("Using ROOT version:", ROOT.__version__)
 print("Using Delphes libraries found at:", DELPHES_PATH)
 
 debug = 0
-overwrite_results = False
+overwrite_results = True
 max_entries = None
 results_file = "fatjet_reconstruction_efficiency_results.root"
 
@@ -95,7 +95,7 @@ def get_fatjets(FatJet_branch):
     for i in range(FatJet_branch.GetEntries()):
         fj = FatJet_branch.At(i)
         if apply_fiducial_cuts_at_filling:
-            if not (fj.PT > 200 and abs(fj.Eta) <= 2.5):
+            if not (fj.PT > 100 and abs(fj.Eta) <= 2.5):
                 continue
         ak10jets.append((fj.P4(),fj.SoftDroppedP4[0].M()))
     return ak10jets
@@ -156,9 +156,6 @@ def fatjet_efficiency(inputRootFile, start_entry=0, end_entry=None, progress=Tru
         for pid, props in boson_defs.items():
             bosons = find_bosons(Particle_branch, pid, props["daughter_pids"])
             for p in bosons:
-                if apply_fiducial_cuts_at_filling:
-                    if not (p.PT > 200 and abs(p.Eta) <= 2.5):
-                        continue
                 all_gen.append((pid, p))
 
         fj_list = get_fatjets(FatJet_branch)

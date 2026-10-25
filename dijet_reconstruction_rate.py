@@ -19,7 +19,7 @@ print("Using ROOT version:", ROOT.__version__)
 print("Using Delphes libraries found at:", DELPHES_PATH)
 
 debug = 0
-overwrite_results = False
+overwrite_results = True
 max_entries = None
 results_file = "dijet_reconstruction_efficiency_results.root"
 
@@ -212,9 +212,6 @@ def dijet_efficiency(inputRootFile, start_entry=0, end_entry=None, progress=True
         for pid, props in boson_defs.items():
             bosons = find_bosons(Particle_branch, pid, props["daughter_pids"])
             for p in bosons:
-                if apply_fiducial_cuts_at_filling:
-                    if not (p.PT > 200 and abs(p.Eta) <= 2.5):
-                        continue
                 all_gen.append((pid, p))
 
         jet_list = get_jets(Jet_branch)

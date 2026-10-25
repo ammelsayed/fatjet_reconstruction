@@ -1,2 +1,5 @@
 __pycache__/
 events_5k.root
+fatjet_reconstruction_efficiency_results.root
+dijet_reconstruction_efficiency_results.root
+*.log
