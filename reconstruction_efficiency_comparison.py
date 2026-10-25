@@ -66,55 +66,54 @@ def set_pixel_text(axis, label_px, title_px):
     axis.SetTitleFont(43)
     axis.SetTitleSize(title_px)
 
+def band_color(color):
+    """Light tint of a curve colour for the uncertainty band filling."""
+    tc = ROOT.gROOT.GetColor(color)
+    return ROOT.TColor.GetColor(*[0.8 + 0.2 * v for v in [tc.GetRed(), tc.GetGreen(), tc.GetBlue()]])
+
 def make_efficiency(h_mat, h_tot, color, with_mass_window):
-    """Efficiency curve of one reconstruction, with or without mass window. The
-    Clopper-Pearson intervals are carried by the painted TGraphAsymmErrors and
-    drawn as a filled uncertainty band."""
+    """TGraphAsymmErrors of the reconstruction efficiency with or without mass
+    window, holding the asymmetric Clopper-Pearson intervals at 95% confidence
+    level; it is drawn as a filled band with the central line on top."""
     eff = ROOT.TEfficiency(h_mat, h_tot)
     eff.SetStatisticOption(ROOT.TEfficiency.kFCP)
     eff.SetConfidenceLevel(0.95)
-    eff.SetLineWidth(2)
-    eff.SetLineStyle(2 if with_mass_window else 1)
-    eff.SetLineColor(color)
-    eff.SetFillColorAlpha(color, 0.1 if with_mass_window else 0.2)
-    return eff
+    total = eff.GetTotalHistogram()
+    filled = [i for i in range(1, total.GetNbinsX() + 1) if total.GetBinContent(i) != 0]
+    graph = ROOT.TGraphAsymmErrors(len(filled))
+    for point, i in enumerate(filled):
+        graph.SetPoint(point, total.GetBinCenter(i), eff.GetEfficiency(i))
+        graph.SetPointError(point, 0.0, 0.0, eff.GetEfficiencyErrorLow(i), eff.GetEfficiencyErrorUp(i))
+    graph.SetLineWidth(2)
+    graph.SetLineStyle(2 if with_mass_window else 1)
+    graph.SetLineColor(color)
+    return graph
 
 def plot_efficiency(name, fatjet_hists, dijet_hists):
     """Draw the FatJet and dijet reconstruction efficiency of one boson (each
     with and without the mass window) on one canvas and save the figure."""
     canvas = ROOT.TCanvas("c_eff_pt_" + name, "FatJet vs Dijet Efficiency vs pT", 800, 600)
 
-    curricula = []
+    curves = []
     for hists, color in [[fatjet_hists, ROOT.kBlack], [dijet_hists, 2]]:
-        curricula.append(make_efficiency(hists["matched_pt"], hists["total_pt"], color, False))
-        curricula.append(make_efficiency(hists["matched_pt_mw"], hists["total_pt"], color, True))
+        curves.append(make_efficiency(hists["matched_pt"], hists["total_pt"], color, False))
+        curves.append(make_efficiency(hists["matched_pt_mw"], hists["total_pt"], color, True))
 
-    # the painted TGraphAsymmErrors of each efficiency carries the asymmetric
-    # Clopper-Pearson intervals; it is materialized on a scratch canvas and
-    # split into a filled band and the central line drawn here
-    scratch = ROOT.TCanvas("scratch_eff_" + name, "", 10, 10)
-    bands, curves = [], []
-    for eff in curricula:
-        eff.Draw("a2")
-        ROOT.gPad.Update()
-        graph = eff.GetPaintedGraph()
-        graph.SetLineColor(eff.GetLineColor())
-        graph.SetLineStyle(eff.GetLineStyle())
-        graph.SetLineWidth(eff.GetLineWidth())
-        band = graph.Clone()
-        band.SetLineColorAlpha(eff.GetLineColor(), 0.0)   # hide the band border
-        bands.append(band)
-        curves.append(graph)
-    canvas.cd()
     frame = canvas.DrawFrame(150, 0.0, 1150, 1.65)
     frame.SetTitle("Reconstruction efficiency; Truth p_{T} [GeV]; #epsilon_{reco.} (%)")
     frame.GetXaxis().SetNdivisions(505, True)
     frame.GetYaxis().SetNdivisions(1010, True)
-    for band in bands:
-        band.Draw("same 2")
+    bands = []
+    for curve in curves:
+        band = curve.Clone()
+        band.SetFillColor(band_color(curve.GetLineColor()))
+        band.SetFillStyle(1001)
+        band.SetLineColor(band_color(curve.GetLineColor()))   # hide the band border
+        bands.append(band)   # keep the Python reference: cloned graphs are
+        band.Draw("same 3")  # garbage-collected otherwise
         ROOT.gPad.Update()
     for curve in curves:
-        curve.Draw("same L")
+        curve.Draw("same LX")
         ROOT.gPad.Update()
 
     draw_label_block([
@@ -131,10 +130,10 @@ def plot_efficiency(name, fatjet_hists, dijet_hists):
     leg.SetFillColor(0)
     leg.SetBorderSize(0)
     leg.SetTextSize(0.03)
-    leg.AddEntry(curricula[0], "FatJet (angular match)", "l")
-    leg.AddEntry(curricula[1], "FatJet + #it{m_{SD}} window", "l")
-    leg.AddEntry(curricula[2], "Dijet (angular match)", "l")
-    leg.AddEntry(curricula[3], "Dijet + #it{m_{jj}} window", "l")
+    leg.AddEntry(curves[0], "FatJet (angular match)", "l")
+    leg.AddEntry(curves[1], "FatJet + #it{m_{SD}} window", "l")
+    leg.AddEntry(curves[2], "Dijet (angular match)", "l")
+    leg.AddEntry(curves[3], "Dijet + #it{m_{jj}} window", "l")
     leg.Draw()
 
     output = "./plots/reconstruction_efficiency_comparison_vs_pt_" + name
@@ -160,40 +159,27 @@ def plot_efficiency_with_correlations(name, fatjet_hists, dijet_hists, corr_tree
     pad_bot.Draw()
 
     pad_top.cd()
-    curricula = []
+    curves = []
     for hists, color in [[fatjet_hists, ROOT.kBlack], [dijet_hists, 2]]:
-        curricula.append(make_efficiency(hists["matched_pt"], hists["total_pt"], color, False))
-        curricula.append(make_efficiency(hists["matched_pt_mw"], hists["total_pt"], color, True))
+        curves.append(make_efficiency(hists["matched_pt"], hists["total_pt"], color, False))
+        curves.append(make_efficiency(hists["matched_pt_mw"], hists["total_pt"], color, True))
 
-    # the painted TGraphAsymmErrors of each efficiency carries the asymmetric
-    # Clopper-Pearson intervals; it is materialized on a scratch canvas and
-    # split into a filled band and the central line drawn here
-    scratch = ROOT.TCanvas("scratch_corr_" + name, "", 10, 10)
-    bands, curves = [], []
-    for eff in curricula:
-        eff.Draw("a2")
-        ROOT.gPad.Update()
-        graph = eff.GetPaintedGraph()
-        graph.SetLineColor(eff.GetLineColor())
-        graph.SetLineStyle(eff.GetLineStyle())
-        graph.SetLineWidth(eff.GetLineWidth())
-        band = graph.Clone()
-        band.SetLineColorAlpha(eff.GetLineColor(), 0.0)   # hide the band border
-        bands.append(band)
-        curves.append(graph)
-    pad_top.cd()
-
-    # a TEfficiency axis cannot span beyond its own data, so the frame is drawn
-    # explicitly to get the same 0-1200 GeV range as the 2D histogram below.
+    # the frame provides the shared 0-1200 GeV range of the 2D histogram below
     frame = pad_top.DrawFrame(0.0, 0.0, 1200.0, 1.65)
     frame.GetYaxis().SetTitle("#epsilon_{reco.} (%)")
     frame.GetXaxis().SetLabelSize(0)   # shared axis: labelled by the 2D histogram below
     frame.GetXaxis().SetNdivisions(506, True)
-    for band in bands:
-        band.Draw("same 2")
+    bands = []
+    for curve in curves:
+        band = curve.Clone()
+        band.SetFillColor(band_color(curve.GetLineColor()))
+        band.SetFillStyle(1001)
+        band.SetLineColor(band_color(curve.GetLineColor()))   # hide the band border
+        bands.append(band)   # keep the Python reference: cloned graphs are
+        band.Draw("same 3")  # garbage-collected otherwise
         ROOT.gPad.Update()
     for curve in curves:
-        curve.Draw("same L")
+        curve.Draw("same LX")
         ROOT.gPad.Update()
 
     draw_label_block([
@@ -208,10 +194,10 @@ def plot_efficiency_with_correlations(name, fatjet_hists, dijet_hists, corr_tree
     leg.SetFillColor(0)
     leg.SetBorderSize(0)
     leg.SetTextSize(0.04)
-    leg.AddEntry(curricula[0], "Ak10-jet (angular match)", "l")
-    leg.AddEntry(curricula[1], "Ak10-jet + #it{m_{SD}} window", "l")
-    leg.AddEntry(curricula[2], "Dijet (Ak4) (angular match)", "l")
-    leg.AddEntry(curricula[3], "Dijet (Ak4) + #it{m_{jj}} window", "l")
+    leg.AddEntry(curves[0], "Ak10-jet (angular match)", "l")
+    leg.AddEntry(curves[1], "Ak10-jet + #it{m_{SD}} window", "l")
+    leg.AddEntry(curves[2], "Dijet (Ak4) (angular match)", "l")
+    leg.AddEntry(curves[3], "Dijet (Ak4) + #it{m_{jj}} window", "l")
     leg.Draw()
 
     pad_bot.cd()
@@ -241,7 +227,6 @@ def plot_efficiency_with_correlations(name, fatjet_hists, dijet_hists, corr_tree
     ], text_size=0.055, x=0.56, step=0.08)
 
     output = "./plots/reconstruction_efficiency_comparison_vs_pt_" + name + "_with_w_correlations"
-    canvas.Update()
     canvas.SaveAs(output + ".png")
     canvas.SaveAs(output + ".pdf")
     canvas.Close()
