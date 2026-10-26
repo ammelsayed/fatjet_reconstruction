@@ -3,3 +3,7 @@ events_5k.root
 fatjet_reconstruction_efficiency_results.root
 dijet_reconstruction_efficiency_results.root
 *.log
+dijet_histograms_results.root
+fatjet_histograms_results.root
+fatjet_histograms_results_v7.root
+fatjet_reconstruction_efficiency_results_v7.root
