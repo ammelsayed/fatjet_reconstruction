@@ -188,7 +188,7 @@ def plot_efficiency_with_correlations(name, fatjet_hists, dijet_hists, corr_tree
         "Ak10-jet: #DeltaR(W, J_{reco.}) #leq 1.0",
         "Dijet (Ak4): #DeltaR(q, j) #leq 0.4",
         "Clopper-Pearson @ 95% CL"
-    ], text_size=0.04, step=0.06)
+    ], text_size=0.038, step=0.06)
 
     leg = ROOT.TLegend(0.6, 0.65, 0.75, 0.92)
     leg.SetFillColor(0)
